@@ -58,7 +58,7 @@ async function scoreAndSortFlights(flights: Flight[], preferredAirline?: string)
     return { ...flight, duration, distance, score };
   });
 
-  return scored.sort((a, b) => b.score - a.score);
+  return scored.sort((a, b) => a.score - b.score);
 }
 
 app.get('/api/flights/search', async (req: Request, res: Response) => {
