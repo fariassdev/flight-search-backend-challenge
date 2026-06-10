@@ -18,6 +18,18 @@ interface ScoredFlight extends Flight {
   score: number;
 }
 
+interface FlightSearchQueryParams {
+  maxDuration?: string;
+  minDepartureTime?: string;
+  maxDepartureTime?: string;
+  preferredAirline?: string;
+}
+
+interface FlightSearchResponse {
+  count: number;
+  flights: ScoredFlight[];
+}
+
 // Distance calculation between airports
 // TODO: Implement using OpenFlights airport data
 function getDistanceBetweenAirports(code1?: string, code2?: string): number {
@@ -63,7 +75,7 @@ function sortByScore(flights: ScoredFlight[]) {
   return [...flights].sort((a, b) => a.score - b.score);
 }
 
-app.get('/api/flights/search', async (req: Request, res: Response) => {
+app.get<never, FlightSearchResponse, never, FlightSearchQueryParams>('/api/flights/search', async (req, res) => {
   const { minDepartureTime, maxDepartureTime, maxDuration, preferredAirline } = req.query;
 
   const flights = await fetchFlightData();
