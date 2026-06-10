@@ -60,7 +60,7 @@ function scoreFlights(flights: Flight[], preferredAirline?: string): ScoredFligh
 }
 
 function sortByScore(flights: ScoredFlight[]) {
-  return flights.sort((a, b) => a.score - b.score);
+  return [...flights].sort((a, b) => a.score - b.score);
 }
 
 app.get('/api/flights/search', async (req: Request, res: Response) => {
