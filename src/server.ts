@@ -49,16 +49,18 @@ function calculateFlightScore(duration: number, carrier: string, preferredAirlin
   return duration * multiplier;
 }
 
-async function scoreAndSortFlights(flights: Flight[], preferredAirline?: string): Promise<ScoredFlight[]> {
-  const scored = flights.map(flight => {
+function scoreFlights(flights: Flight[], preferredAirline?: string): ScoredFlight[] {
+  return flights.map(flight => {
     const duration = calculateDuration(flight.departureTime, flight.arrivalTime);
     const distance = getDistanceBetweenAirports(flight.origin, flight.destination);
     const score = calculateFlightScore(duration, flight.carrier, preferredAirline);
 
     return { ...flight, duration, distance, score };
   });
+}
 
-  return scored.sort((a, b) => a.score - b.score);
+function sortByScore(flights: ScoredFlight[]) {
+  return [...flights].sort((a, b) => a.score - b.score);
 }
 
 app.get('/api/flights/search', async (req: Request, res: Response) => {
@@ -66,11 +68,12 @@ app.get('/api/flights/search', async (req: Request, res: Response) => {
 
   const flights = await fetchFlightData();
 
-  const results = await scoreAndSortFlights(flights, preferredAirline as string);
+  const scored = scoreFlights(flights, preferredAirline as string);
+  const sorted = sortByScore(scored);
 
   res.json({
-    count: results.length,
-    flights: results
+    count: sorted.length,
+    flights: sorted
   });
 });
 
