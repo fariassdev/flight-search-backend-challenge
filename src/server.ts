@@ -36,6 +36,10 @@ interface FlightFilters {
   maxDepartureTime?: string;
 }
 
+interface ApiError {
+  error: string;
+}
+
 // Distance calculation between airports
 // TODO: Implement using OpenFlights airport data
 function getDistanceBetweenAirports(code1?: string, code2?: string): number {
@@ -106,10 +110,13 @@ function sortByScore(flights: ScoredFlight[]) {
   return [...flights].sort((a, b) => a.score - b.score);
 }
 
-app.get<never, FlightSearchResponse, never, FlightSearchQueryParams>('/api/flights/search', async (req, res) => {
+app.get<never, FlightSearchResponse | ApiError, never, FlightSearchQueryParams>('/api/flights/search', async (req, res) => {
   const { minDepartureTime, maxDepartureTime, maxDuration, preferredAirline } = req.query;
 
-  const parsedMaxDuration = Number.isFinite(Number(maxDuration)) ? Number(maxDuration) : undefined;
+  const parsedMaxDuration = Number(maxDuration);
+  if (!Number.isFinite(parsedMaxDuration) || parsedMaxDuration < 0) {
+    return res.status(400).json({ error: 'maxDuration must be a positive number' });
+  }
   const filters: FlightFilters = {
     maxDuration: parsedMaxDuration,
     minDepartureTime: minDepartureTime,
