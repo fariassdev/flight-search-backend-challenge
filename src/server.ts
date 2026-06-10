@@ -43,20 +43,22 @@ function calculateDuration(departureTime: string, arrivalTime: string): number {
   return (arrival.getTime() - departure.getTime()) / (1000 * 60 * 60);
 }
 
+function calculateFlightScore(duration: number, carrier: string, preferredAirline?: string): number {
+  const isPreferred = preferredAirline && carrier === preferredAirline;
+  const multiplier = isPreferred ? 0.9 : 1;
+  return duration * multiplier;
+}
+
 async function scoreAndSortFlights(flights: Flight[], preferredAirline?: string): Promise<ScoredFlight[]> {
   const scored = flights.map(flight => {
     const duration = calculateDuration(flight.departureTime, flight.arrivalTime);
     const distance = getDistanceBetweenAirports(flight.origin, flight.destination);
-
-    // TODO: Implement carrier preference scoring
-    const _carrierPref = null;
-
-    const score = duration;
+    const score = calculateFlightScore(duration, flight.carrier, preferredAirline);
 
     return { ...flight, duration, distance, score };
   });
 
-  return scored.sort((a, b) => b.score - a.score);
+  return scored.sort((a, b) => a.score - b.score);
 }
 
 app.get('/api/flights/search', async (req: Request, res: Response) => {
