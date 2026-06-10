@@ -30,6 +30,12 @@ interface FlightSearchResponse {
   flights: ScoredFlight[];
 }
 
+interface FlightFilters {
+  maxDuration?: number;
+  minDepartureTime?: string;
+  maxDepartureTime?: string;
+}
+
 // Distance calculation between airports
 // TODO: Implement using OpenFlights airport data
 function getDistanceBetweenAirports(code1?: string, code2?: string): number {
@@ -71,6 +77,31 @@ function scoreFlights(flights: Flight[], preferredAirline?: string): ScoredFligh
   });
 }
 
+function filterFlights(flights: Flight[], { maxDuration, minDepartureTime, maxDepartureTime }: FlightFilters): Flight[] {
+  return flights.filter(flight => {
+    if (maxDuration && maxDuration > 0) {
+      const duration = calculateDuration(flight.departureTime, flight.arrivalTime);
+      if (duration > maxDuration) {
+        return false;
+      }
+    }
+
+    if (minDepartureTime) {
+      if (new Date(flight.departureTime) < new Date(minDepartureTime)) {
+        return false;
+      }
+    }
+
+    if (maxDepartureTime) {
+      if (new Date(flight.departureTime) > new Date(maxDepartureTime)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
 function sortByScore(flights: ScoredFlight[]) {
   return [...flights].sort((a, b) => a.score - b.score);
 }
@@ -78,9 +109,17 @@ function sortByScore(flights: ScoredFlight[]) {
 app.get<never, FlightSearchResponse, never, FlightSearchQueryParams>('/api/flights/search', async (req, res) => {
   const { minDepartureTime, maxDepartureTime, maxDuration, preferredAirline } = req.query;
 
+  const parsedMaxDuration = Number.isFinite(Number(maxDuration)) ? Number(maxDuration) : undefined;
+  const filters: FlightFilters = {
+    maxDuration: parsedMaxDuration,
+    minDepartureTime: minDepartureTime,
+    maxDepartureTime: maxDepartureTime,
+  };
+
   const flights = await fetchFlightData();
 
-  const scored = scoreFlights(flights, preferredAirline as string);
+  const filtered = filterFlights(flights, filters);
+  const scored = scoreFlights(filtered, preferredAirline);
   const sorted = sortByScore(scored);
 
   res.json({
