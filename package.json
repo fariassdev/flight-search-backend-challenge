@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon",
+    "fetch-airports": "ts-node scripts/fetch-airports.ts",
     "test": "jest",
     "test:watch": "jest --watch"
   },
