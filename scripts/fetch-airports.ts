@@ -7,6 +7,13 @@ const AIRPORTS_DAT_URL =
 const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'airports.json');
 const OPENFLIGHTS_NULL = '\\N';
 
+interface AirportCoordinate {
+  latitude: number;
+  longitude: number;
+}
+
+type AirportLookupMap = Record<string, AirportCoordinate>;
+
 interface ParsedAirportRecord {
   id: string;
   name: string;
@@ -101,6 +108,21 @@ function normalizeRecords(records: ParsedAirportRecord[]): NormalizedAirport[] {
   return normalized;
 }
 
+function buildAirportLookup(airports: NormalizedAirport[]): AirportLookupMap {
+  const lookup: AirportLookupMap = {};
+
+  for (const { iata, latitude, longitude } of airports) {
+    lookup[iata] = { latitude, longitude };
+  }
+
+  return lookup;
+}
+
+function writeAirportsJson(lookup: AirportLookupMap, filePath: string): void {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(lookup, null, 2)}\n`, 'utf8');
+}
+
 async function main() {
   console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
   const datContent = await fetchAirportsDat();
@@ -109,6 +131,10 @@ async function main() {
   const skipped = records.length - normalized.length;
   console.log(`Parsed ${records.length} airport records`);
   console.log(`${normalized.length} valid records (${skipped} skipped)`);
+
+  const lookup = buildAirportLookup(normalized);
+  writeAirportsJson(lookup, OUTPUT_PATH);
+  console.log(`Wrote ${Object.keys(lookup).length} airport codes to ${OUTPUT_PATH}`);
 }
 
 main().catch((error: unknown) => {
