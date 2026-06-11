@@ -1,7 +1,10 @@
+import fs from 'fs';
+import path from 'path';
 import { parse } from 'csv-parse/sync';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
+const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'airports.json');
 const OPENFLIGHTS_NULL = '\\N';
 
 interface ParsedAirportRecord {
@@ -19,6 +22,12 @@ interface ParsedAirportRecord {
   tz: string | null;
   type: string | null;
   source: string | null;
+}
+
+interface NormalizedAirport {
+  iata: string;
+  latitude: number;
+  longitude: number;
 }
 
 function castOpenFlightsValue(value: string): string | null {
@@ -67,25 +76,39 @@ function isValidCoordinate(latitude: string | null, longitude: string | null): b
   return Number.isFinite(lat) && Number.isFinite(lon);
 }
 
-function isValidRecord(record: ParsedAirportRecord): boolean {
-  return (
-    isValidCoordinate(record.latitude, record.longitude) &&
-    isValidCode(record.iata)
-  );
+function normalizeRecord(record: ParsedAirportRecord): NormalizedAirport | null {
+  if (!isValidCode(record.iata) || !isValidCoordinate(record.latitude, record.longitude)) {
+    return null;
+  }
+
+  return {
+    iata: record.iata.toUpperCase(),
+    latitude: Number(record.latitude),
+    longitude: Number(record.longitude),
+  };
 }
 
-function filterValidRecords(records: ParsedAirportRecord[]): ParsedAirportRecord[] {
-  return records.filter(isValidRecord);
+function normalizeRecords(records: ParsedAirportRecord[]): NormalizedAirport[] {
+  const normalized: NormalizedAirport[] = [];
+
+  for (const record of records) {
+    const airport = normalizeRecord(record);
+    if (airport) {
+      normalized.push(airport);
+    }
+  }
+
+  return normalized;
 }
 
 async function main() {
   console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
   const datContent = await fetchAirportsDat();
   const records = parseAirportsDat(datContent);
-  const validRecords = filterValidRecords(records);
-  const skipped = records.length - validRecords.length;
+  const normalized = normalizeRecords(records);
+  const skipped = records.length - normalized.length;
   console.log(`Parsed ${records.length} airport records`);
-  console.log(`${validRecords.length} valid records (${skipped} skipped)`);
+  console.log(`${normalized.length} valid records (${skipped} skipped)`);
 }
 
 main().catch((error: unknown) => {
