@@ -57,12 +57,35 @@ function parseAirportsDat(content: string): ParsedAirportRecord[] {
   }) as ParsedAirportRecord[];
 }
 
+function isValidCode(code: string | null | undefined): code is string {
+  return !!code && typeof code === 'string';
+}
+
+function isValidCoordinate(latitude: string | null, longitude: string | null): boolean {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  return Number.isFinite(lat) && Number.isFinite(lon);
+}
+
+function isValidRecord(record: ParsedAirportRecord): boolean {
+  return (
+    isValidCoordinate(record.latitude, record.longitude) &&
+    isValidCode(record.iata)
+  );
+}
+
+function filterValidRecords(records: ParsedAirportRecord[]): ParsedAirportRecord[] {
+  return records.filter(isValidRecord);
+}
+
 async function main() {
   console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
   const datContent = await fetchAirportsDat();
   const records = parseAirportsDat(datContent);
-  const withoutIata = records.filter((record) => record.iata === null).length;
-  console.log(`Parsed ${records.length} airport records (${withoutIata} without IATA code)`);
+  const validRecords = filterValidRecords(records);
+  const skipped = records.length - validRecords.length;
+  console.log(`Parsed ${records.length} airport records`);
+  console.log(`${validRecords.length} valid records (${skipped} skipped)`);
 }
 
 main().catch((error: unknown) => {
