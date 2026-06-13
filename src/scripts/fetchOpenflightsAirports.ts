@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { Airport, AirportsJson } from '../airport/airport.model';
-import { AirportSchema } from '../airport/airport.schema';
+import { AirportSchema, AirportsJsonSchema } from '../airport/airport.schema';
 import type { ZodError } from 'zod';
 
 const AIRPORTS_DAT_URL =
@@ -123,6 +123,10 @@ function buildAirportsJson(airports: Airport[]): AirportsJson {
   return airportsJson;
 }
 
+function validateAirportsJson(airportsJson: AirportsJson): AirportsJson {
+  return AirportsJsonSchema.parse(airportsJson);
+}
+
 function writeJson(filePath: string, data: Record<string, unknown>): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
@@ -138,7 +142,7 @@ async function main() {
   console.log(`Parsed ${openFlightsAirports.length} airport records`);
   console.log(`${airports.length} valid records (${skipped} skipped)`);
   
-  const airportsJson = buildAirportsJson(airports);
+  const airportsJson = validateAirportsJson(buildAirportsJson(airports));
   writeJson(OUTPUT_PATH, airportsJson);
   console.log(`Wrote ${airports.length} airport codes to ${OUTPUT_PATH}`);
 
