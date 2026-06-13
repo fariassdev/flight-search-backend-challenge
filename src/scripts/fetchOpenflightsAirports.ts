@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
-const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'airports.json');
+const OUTPUT_PATH = path.join(__dirname, '..', '..', 'data', 'airports.json');
 const OPENFLIGHTS_NULL = '\\N';
 
 interface AirportCoordinate {
