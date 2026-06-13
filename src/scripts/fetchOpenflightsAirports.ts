@@ -3,11 +3,20 @@ import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { Airport, AirportsJson } from '../airport/airport.model';
 import { AirportSchema } from '../airport/airport.schema';
+import type { ZodError } from 'zod';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
 const OUTPUT_PATH = path.join(__dirname, '..', '..', 'data', 'airports.json');
+const ERROR_LOG_PATH = path.join(__dirname, '..', '..', 'data', 'airports.errors.json');
 const OPENFLIGHTS_NULL = '\\N';
+
+interface AirportValidationError {
+  field: string;
+  error: string;
+  records: OpenFlightsAirport[];
+}
+
 interface OpenFlightsAirport {
   id: string;
   name: string;
@@ -61,33 +70,47 @@ function parseOpenFlightsAirports(content: string): OpenFlightsAirport[] {
   }) as OpenFlightsAirport[];
 }
 
-function toAirportModel(record: OpenFlightsAirport): Airport | null {
-  const result = AirportSchema.safeParse({
+function parseAirportSchema(record: OpenFlightsAirport) {
+  return AirportSchema.safeParse({
     iataCode: record.iata?.toUpperCase(),
     latitude: Number(record.latitude),
     longitude: Number(record.longitude),
   });
-
-  if (!result.success) {
-    console.warn(`Skipping airport record due to validation errors: ${JSON.stringify(record)}\nErrors: ${result.error}`);
-    return null;
-  }
-
-  return result.data;
 }
 
+function processZodErrors(issues: ZodError<Airport>['issues']) {
+  return issues.map(({ path, message }) => ({
+    field: String(path[0] ?? 'unknown'),
+    error: message,
+  }));
+}
 
-function mapOpenFlightsToAirports(records: OpenFlightsAirport[]): Airport[] {
+function mapOpenFlightsToAirports(records: OpenFlightsAirport[]): {
+  airports: Airport[];
+  errors: Record<string, AirportValidationError> | null;
+} {
   const airports: Airport[] = [];
+  let errors: Record<string, AirportValidationError> | null = null;
 
   for (const record of records) {
-    const airport = toAirportModel(record);
-    if (airport) {
-      airports.push(airport);
+    const result = parseAirportSchema(record);
+
+    if (result.success) {
+      airports.push(result.data);
+      continue;
+    }
+
+    const zodErrors = processZodErrors(result.error.issues);
+    errors ??= {};
+    for (const { field, error } of zodErrors) {
+      if (!errors[field]) {
+        errors[field] = { field, error, records: [] };
+      }
+      errors[field].records.push(record);
     }
   }
 
-  return airports;
+  return { airports, errors };
 }
 
 function buildAirportsJson(airports: Airport[]): AirportsJson {
@@ -100,23 +123,29 @@ function buildAirportsJson(airports: Airport[]): AirportsJson {
   return airportsJson;
 }
 
-function writeAirportsJson(airportsJson: AirportsJson, filePath: string): void {
+function writeJson(filePath: string, data: Record<string, unknown>): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(airportsJson, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
 async function main() {
   console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
   const rawOpenFlightsAirports = await fetchOpenFlightsAirports();
   const openFlightsAirports = parseOpenFlightsAirports(rawOpenFlightsAirports);
-  const airports = mapOpenFlightsToAirports(openFlightsAirports);
+  const { airports, errors } = mapOpenFlightsToAirports(openFlightsAirports);
+  
   const skipped = openFlightsAirports.length - airports.length;
   console.log(`Parsed ${openFlightsAirports.length} airport records`);
   console.log(`${airports.length} valid records (${skipped} skipped)`);
-
+  
   const airportsJson = buildAirportsJson(airports);
-  writeAirportsJson(airportsJson, OUTPUT_PATH);
-  console.log(`Wrote ${Object.keys(airportsJson).length} airport codes to ${OUTPUT_PATH}`);
+  writeJson(OUTPUT_PATH, airportsJson);
+  console.log(`Wrote ${airports.length} airport codes to ${OUTPUT_PATH}`);
+
+  if (errors) {
+    writeJson(ERROR_LOG_PATH, errors);
+    console.log(`Wrote ${skipped} validation errors to ${ERROR_LOG_PATH}`);
+  }
 }
 
 main().catch((error: unknown) => {

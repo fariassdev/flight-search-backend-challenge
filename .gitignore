@@ -12,6 +12,7 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+data/*errors.json
 
 # OS files
 .DS_Store
