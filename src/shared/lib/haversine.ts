@@ -24,7 +24,7 @@ export function haversineDistanceMiles(from: Coordinates, to: Coordinates): numb
     haversineRadians(deltaLonRadians);
 
   const centralAngleRadians =
-    2 * Math.asin(Math.sqrt(haversineOfCentralAngle));
+    2 * Math.asin(Math.sqrt(Math.min(1, haversineOfCentralAngle)));
 
   return EARTH_RADIUS_MILES * centralAngleRadians;
 }
