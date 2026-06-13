@@ -1,7 +1,7 @@
-export interface Airport {
+import type { Coordinates } from "../shared/coordinates/coordinates.model";
+
+export interface Airport extends Coordinates {
   readonly iataCode: string;
-  readonly latitude: number;
-  readonly longitude: number;
 }
 
 export type AirportsJson = Record<Airport['iataCode'], Airport>;
