@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { Airport, AirportsJson } from '../airport/airport.model';
+import { AirportSchema } from '../airport/airport.schema';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
@@ -60,33 +61,27 @@ function parseOpenFlightsAirports(content: string): OpenFlightsAirport[] {
   }) as OpenFlightsAirport[];
 }
 
-function isValidCode(code: string | null | undefined): code is string {
-  return !!code && typeof code === 'string';
-}
+function toAirportModel(record: OpenFlightsAirport): Airport | null {
+  const result = AirportSchema.safeParse({
+    iataCode: record.iata?.toUpperCase(),
+    latitude: Number(record.latitude),
+    longitude: Number(record.longitude),
+  });
 
-function isValidCoordinate(latitude: string | null, longitude: string | null): boolean {
-  const lat = Number(latitude);
-  const lon = Number(longitude);
-  return Number.isFinite(lat) && Number.isFinite(lon);
-}
-
-function normalizeAirport(record: OpenFlightsAirport): Airport | null {
-  if (!isValidCode(record.iata) || !isValidCoordinate(record.latitude, record.longitude)) {
+  if (!result.success) {
+    console.warn(`Skipping airport record due to validation errors: ${JSON.stringify(record)}\nErrors: ${result.error}`);
     return null;
   }
 
-  return {
-    iataCode: record.iata.toUpperCase(),
-    latitude: Number(record.latitude),
-    longitude: Number(record.longitude),
-  };
+  return result.data;
 }
 
-function normalizeAirports(records: OpenFlightsAirport[]): Airport[] {
+
+function mapOpenFlightsToAirports(records: OpenFlightsAirport[]): Airport[] {
   const airports: Airport[] = [];
 
   for (const record of records) {
-    const airport = normalizeAirport(record);
+    const airport = toAirportModel(record);
     if (airport) {
       airports.push(airport);
     }
@@ -114,7 +109,7 @@ async function main() {
   console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
   const rawOpenFlightsAirports = await fetchOpenFlightsAirports();
   const openFlightsAirports = parseOpenFlightsAirports(rawOpenFlightsAirports);
-  const airports = normalizeAirports(openFlightsAirports);
+  const airports = mapOpenFlightsToAirports(openFlightsAirports);
   const skipped = openFlightsAirports.length - airports.length;
   console.log(`Parsed ${openFlightsAirports.length} airport records`);
   console.log(`${airports.length} valid records (${skipped} skipped)`);
