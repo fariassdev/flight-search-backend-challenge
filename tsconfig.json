@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
+    "types": ["node", "jest", "express"],
     "noEmit": true
   },
   "include": ["src/**/*", "tests/**/*", "jest.config.ts"],
