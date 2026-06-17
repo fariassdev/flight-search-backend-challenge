@@ -1,5 +1,4 @@
 import z from "zod";
-import type { Coordinates } from "./coordinates.model";
 
 export const CoordinatesSchema = z.object({
   latitude:  z.number()
@@ -8,4 +7,6 @@ export const CoordinatesSchema = z.object({
   longitude:  z.number()
     .min(-180, { message: 'Longitude must be between -180 and 180' })
     .max(180, { message: 'Longitude must be between -180 and 180' }),
-}) satisfies z.ZodType<Coordinates>;
+});
+
+export type Coordinates = z.infer<typeof CoordinatesSchema>;

@@ -1,5 +1,4 @@
-import type { Airport, AirportsJson } from './airport.model';
-import { AirportsJsonSchema } from './airport.schema';
+import { AirportsJsonSchema, type Airport, type AirportsJson } from './airport.schema';
 import airportsJson from './data/airports.json';
 
 export interface IAirportRepository {

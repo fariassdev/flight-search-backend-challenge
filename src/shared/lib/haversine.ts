@@ -1,4 +1,4 @@
-import { Coordinates } from '../coordinates/coordinates.model';
+import type { Coordinates } from '../coordinates/coordinates.schema';
 
 const EARTH_RADIUS_MILES = 3958.756;
 

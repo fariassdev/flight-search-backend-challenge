@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
-import { Airport, AirportsJson } from '../modules/airport/airport.model';
-import { AirportSchema, AirportsJsonSchema } from '../modules/airport/airport.schema';
+import { AirportSchema, AirportsJsonSchema, type Airport, type AirportsJson } from '../modules/airport/airport.schema';
 import type { ZodError } from 'zod';
 
 const AIRPORTS_DAT_URL =
