@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
-import { AirportSchema, AirportsJsonSchema, type Airport, type AirportsJson } from '../modules/airport/airport.schema';
 import type { ZodError } from 'zod';
+import { AirportSchema, AirportsJsonSchema, type Airport, type AirportsJson } from '../modules/airport/airport.schema';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';

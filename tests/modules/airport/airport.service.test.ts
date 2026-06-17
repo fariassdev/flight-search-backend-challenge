@@ -1,5 +1,5 @@
-import * as haversine from '../../../src/shared/lib/haversine';
 import { getDistanceBetweenAirports } from '../../../src/modules/airport/airport.service';
+import * as haversine from '../../../src/shared/lib/haversine';
 
 const MOCKED_DISTANCE_MILES = 1234.5;
 const haversineDistanceMilesMock = jest.spyOn(haversine, 'haversineDistanceMiles').mockReturnValue(MOCKED_DISTANCE_MILES);

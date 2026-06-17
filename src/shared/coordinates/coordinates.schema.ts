@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const CoordinatesSchema = z.object({
   latitude:  z.number()
