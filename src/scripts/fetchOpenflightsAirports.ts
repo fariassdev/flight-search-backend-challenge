@@ -6,8 +6,8 @@ import type { ZodError } from 'zod';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
-const OUTPUT_PATH = path.join(process.cwd(), 'src', 'modules', 'airport', 'data', 'airports.json');
-const ERROR_LOG_PATH = path.join(process.cwd(), 'src', 'modules', 'airport', 'data', 'airports.errors.json');
+const OUTPUT_PATH = path.join(process.cwd(), 'src', 'data', 'airports.json');
+const ERROR_LOG_PATH = path.join(process.cwd(), 'src', 'data', 'airports.errors.json');
 const OPENFLIGHTS_NULL = '\\N';
 
 interface AirportValidationError {
