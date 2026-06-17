@@ -1,0 +1,3 @@
+# use npx to ensure local binaries are used
+npx lint-staged
+npm run typecheck

@@ -14,7 +14,8 @@
     "dev": "nodemon",
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prepare": "husky"
   },
   "keywords": [
     "flight",
@@ -29,6 +30,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.0.2",
+    "@commitlint/config-conventional": "21.0.2",
     "@eslint/js": "10.0.1",
     "@types/express": "^4.17.21",
     "@types/jest": "30.0.0",
@@ -39,7 +42,9 @@
     "eslint-import-resolver-typescript": "4.4.5",
     "eslint-plugin-import-x": "4.16.2",
     "globals": "17.6.0",
+    "husky": "9.1.7",
     "jest": "30.4.2",
+    "lint-staged": "17.0.7",
     "nodemon": "^3.0.2",
     "prettier": "3.8.4",
     "ts-jest": "29.4.11",
@@ -49,5 +54,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{json,md,css,scss,html}": [
+      "prettier --write"
+    ]
   }
 }
