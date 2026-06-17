@@ -8,6 +8,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"{src,tests}/**/*.{ts,tsx,css,scss,js,jsx,json,md}\"",
+    "lint": "eslint . --cache",
+    "lint:fix": "eslint . --cache --fix",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon",
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
