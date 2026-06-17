@@ -16,6 +16,7 @@ const config: Config = {
   transform: {
     ...tsJestTransformCfg,
   },
+  clearMocks: true,
 };
 
 export default config;
