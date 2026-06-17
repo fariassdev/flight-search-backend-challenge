@@ -14,7 +14,8 @@
     "dev": "nodemon",
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prepare": "husky"
   },
   "keywords": [
     "flight",
@@ -51,5 +52,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{json,md,css,scss,html}": [
+      "prettier --write"
+    ]
   }
 }
