@@ -14,7 +14,11 @@ const airports = {
 const DEFAULT_TOLERANCE_MILES = 0.3;
 
 // This could be a custom Jest matcher, but for simplicity, we'll just use a helper function here.
-function expectDistanceBeCloseTo(actual: number, expected: number, toleranceMiles = DEFAULT_TOLERANCE_MILES) {
+function expectDistanceBeCloseTo(
+  actual: number,
+  expected: number,
+  toleranceMiles = DEFAULT_TOLERANCE_MILES,
+) {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(toleranceMiles);
 }
 
@@ -73,4 +77,3 @@ describe('haversineDistanceMiles', () => {
     expectDistanceBeCloseTo(distance, 5372.84);
   });
 });
-

@@ -2,12 +2,22 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import type { ZodError } from 'zod';
-import { AirportSchema, AirportsJsonSchema, type Airport, type AirportsJson } from '../modules/airport/airport.schema';
+import {
+  AirportSchema,
+  AirportsJsonSchema,
+  type Airport,
+  type AirportsJson,
+} from '../modules/airport/airport.schema';
 
 const AIRPORTS_DAT_URL =
   'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
 const OUTPUT_PATH = path.join(process.cwd(), 'src', 'data', 'airports.json');
-const ERROR_LOG_PATH = path.join(process.cwd(), 'src', 'data', 'airports.errors.json');
+const ERROR_LOG_PATH = path.join(
+  process.cwd(),
+  'src',
+  'data',
+  'airports.errors.json',
+);
 const OPENFLIGHTS_NULL = '\\N';
 
 interface AirportValidationError {
@@ -40,7 +50,9 @@ function castOpenFlightsValue(value: string): string | null {
 async function fetchOpenFlightsAirports(): Promise<string> {
   const response = await fetch(AIRPORTS_DAT_URL);
   if (!response.ok) {
-    throw new Error(`Failed to download airports.dat: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to download airports.dat: ${response.status} ${response.statusText}`,
+    );
   }
   return response.text();
 }
@@ -136,11 +148,11 @@ async function main() {
   const rawOpenFlightsAirports = await fetchOpenFlightsAirports();
   const openFlightsAirports = parseOpenFlightsAirports(rawOpenFlightsAirports);
   const { airports, errors } = mapOpenFlightsToAirports(openFlightsAirports);
-  
+
   const skipped = openFlightsAirports.length - airports.length;
   console.log(`Parsed ${openFlightsAirports.length} airport records`);
   console.log(`${airports.length} valid records (${skipped} skipped)`);
-  
+
   const airportsJson = validateAirportsJson(buildAirportsJson(airports));
   writeJson(OUTPUT_PATH, airportsJson);
   console.log(`Wrote ${airports.length} airport codes to ${OUTPUT_PATH}`);

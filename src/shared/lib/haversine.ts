@@ -11,7 +11,10 @@ function haversineRadians(angleRadians: number): number {
   return Math.sin(halfAngle) ** 2;
 }
 
-export function haversineDistanceMiles(from: Coordinates, to: Coordinates): number {
+export function haversineDistanceMiles(
+  from: Coordinates,
+  to: Coordinates,
+): number {
   const deltaLatRadians = toRadians(to.latitude - from.latitude);
   const deltaLonRadians = toRadians(to.longitude - from.longitude);
   const originLatRadians = toRadians(from.latitude);
@@ -20,8 +23,8 @@ export function haversineDistanceMiles(from: Coordinates, to: Coordinates): numb
   const haversineOfCentralAngle =
     haversineRadians(deltaLatRadians) +
     Math.cos(originLatRadians) *
-    Math.cos(destinationLatRadians) *
-    haversineRadians(deltaLonRadians);
+      Math.cos(destinationLatRadians) *
+      haversineRadians(deltaLonRadians);
 
   const centralAngleRadians =
     2 * Math.asin(Math.sqrt(Math.min(1, haversineOfCentralAngle)));

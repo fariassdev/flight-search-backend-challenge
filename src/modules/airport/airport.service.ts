@@ -1,7 +1,10 @@
 import { haversineDistanceMiles } from '../../shared/lib/haversine';
 import { findByIata } from './airport.repository';
 
-export function getDistanceBetweenAirports(originCode?: string, destinationCode?: string): number | null {
+export function getDistanceBetweenAirports(
+  originCode?: string,
+  destinationCode?: string,
+): number | null {
   if (!originCode || !destinationCode) return null;
 
   const origin = findByIata(originCode);
