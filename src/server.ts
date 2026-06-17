@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { getDistanceBetweenAirports } from './modules/airport/airport.service';
 
 const app = express();
 
@@ -14,7 +15,7 @@ interface Flight {
 
 interface ScoredFlight extends Flight {
   duration: number;
-  distance: number;
+  distance: number | null;
   score: number;
 }
 
@@ -38,12 +39,6 @@ interface FlightFilters {
 
 interface ApiError {
   error: string;
-}
-
-// Distance calculation between airports
-// TODO: Implement using OpenFlights airport data
-function getDistanceBetweenAirports(code1?: string, code2?: string): number {
-  return 1000;  // Placeholder
 }
 
 let cachedFlights: Flight[] | null = null;
