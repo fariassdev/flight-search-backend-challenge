@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { getDistanceBetweenAirports } from './modules/airport/airport.service';
 
 const app = express();
