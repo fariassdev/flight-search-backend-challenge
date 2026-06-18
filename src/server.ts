@@ -1,5 +1,6 @@
 import express from 'express';
 import { getDistanceBetweenAirports } from './modules/airport/airport.service';
+import type { ApiError } from './shared/errors/api';
 
 const app = express();
 
@@ -36,10 +37,6 @@ interface FlightFilters {
   maxDuration?: number;
   minDepartureTime?: string;
   maxDepartureTime?: string;
-}
-
-interface ApiError {
-  error: string;
 }
 
 let cachedFlights: Flight[] | null = null;
