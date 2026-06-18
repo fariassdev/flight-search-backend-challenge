@@ -6,10 +6,8 @@ import type {
   ScoredFlight,
 } from './flight.schema';
 
-function calculateDuration(departureTime: string, arrivalTime: string): number {
-  const departure = new Date(departureTime);
-  const arrival = new Date(arrivalTime);
-  return (arrival.getTime() - departure.getTime()) / (1000 * 60 * 60);
+function calculateDuration(departureTime: Date, arrivalTime: Date): number {
+  return (arrivalTime.getTime() - departureTime.getTime()) / (1000 * 60 * 60);
 }
 
 function filterFlights(

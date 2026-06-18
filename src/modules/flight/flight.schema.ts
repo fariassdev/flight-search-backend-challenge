@@ -1,17 +1,21 @@
 import { z } from 'zod';
 
+const isoDateTimeCoerce = z.iso.datetime().pipe(z.coerce.date());
+
 export const FlightSchema = z.object({
   carrier: z.string(),
   origin: z.string().optional(),
   destination: z.string().optional(),
-  departureTime: z.iso.datetime(),
-  arrivalTime: z.iso.datetime(),
+  departureTime: isoDateTimeCoerce,
+  arrivalTime: isoDateTimeCoerce,
 });
+
+export const FlightsSchema = z.array(FlightSchema);
 
 export const FlightSearchQuerySchema = z.object({
   maxDuration: z.coerce.number<string>().positive().optional(),
-  minDepartureTime: z.iso.datetime().optional(),
-  maxDepartureTime: z.iso.datetime().optional(),
+  minDepartureTime: isoDateTimeCoerce.optional(),
+  maxDepartureTime: isoDateTimeCoerce.optional(),
   preferredAirline: z.string().optional(),
 });
 
