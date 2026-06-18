@@ -1,43 +1,18 @@
 import express from 'express';
 import { getDistanceBetweenAirports } from './modules/airport/airport.service';
+import type {
+  Flight,
+  FlightSearchFilters,
+  FlightSearchQueryRaw,
+  FlightSearchResponse,
+  ScoredFlight,
+} from './modules/flight/flight.schema';
 import type { ApiError } from './shared/errors/api';
 
 const app = express();
 
 const FLIGHT_DATA_URL =
   'https://gist.githubusercontent.com/bgdavidx/132a9e3b9c70897bc07cfa5ca25747be/raw/8dbbe1db38087fad4a8c8ade48e741d6fad8c872/gistfile1.txt';
-
-interface Flight {
-  carrier: string;
-  origin?: string;
-  destination?: string;
-  departureTime: string;
-  arrivalTime: string;
-}
-
-interface ScoredFlight extends Flight {
-  duration: number;
-  distance: number | null;
-  score: number;
-}
-
-interface FlightSearchQueryParams {
-  maxDuration?: string;
-  minDepartureTime?: string;
-  maxDepartureTime?: string;
-  preferredAirline?: string;
-}
-
-interface FlightSearchResponse {
-  count: number;
-  flights: ScoredFlight[];
-}
-
-interface FlightFilters {
-  maxDuration?: number;
-  minDepartureTime?: string;
-  maxDepartureTime?: string;
-}
 
 let cachedFlights: Flight[] | null = null;
 
@@ -93,7 +68,7 @@ function scoreFlights(
 
 function filterFlights(
   flights: Flight[],
-  { maxDuration, minDepartureTime, maxDepartureTime }: FlightFilters,
+  { maxDuration, minDepartureTime, maxDepartureTime }: FlightSearchFilters,
 ): Flight[] {
   return flights.filter((flight) => {
     if (maxDuration && maxDuration > 0) {
@@ -126,7 +101,7 @@ function sortByScore(flights: ScoredFlight[]) {
   return [...flights].sort((a, b) => a.score - b.score);
 }
 
-app.get<never, FlightSearchResponse | ApiError, never, FlightSearchQueryParams>(
+app.get<never, FlightSearchResponse | ApiError, never, FlightSearchQueryRaw>(
   '/api/flights/search',
   async (req, res) => {
     const {
@@ -142,7 +117,7 @@ app.get<never, FlightSearchResponse | ApiError, never, FlightSearchQueryParams>(
         .status(400)
         .json({ error: 'maxDuration must be a positive number' });
     }
-    const filters: FlightFilters = {
+    const filters: FlightSearchFilters = {
       maxDuration: parsedMaxDuration,
       minDepartureTime: minDepartureTime,
       maxDepartureTime: maxDepartureTime,
