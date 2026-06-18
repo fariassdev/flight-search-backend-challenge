@@ -21,10 +21,10 @@ export const FlightSearchQuerySchema = z.object({
 
 export type Flight = z.infer<typeof FlightSchema>;
 export type FlightSearchQueryRaw = z.input<typeof FlightSearchQuerySchema>;
-export type FlightSearchQueryParsed = z.infer<typeof FlightSearchQuerySchema>;
-export type FlightSearchFilters = Pick<
+export type FlightSearchQueryParsed = z.output<typeof FlightSearchQuerySchema>;
+export type FlightSearchFilters = Omit<
   FlightSearchQueryParsed,
-  'maxDuration' | 'minDepartureTime' | 'maxDepartureTime'
+  'preferredAirline'
 >;
 
 export interface ScoredFlight extends Flight {

@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import type { ApiError } from '../../shared/errors/api';
-import type {
-  FlightSearchFilters,
-  FlightSearchQueryParsed,
-  FlightSearchResponse,
+import {
+  FlightSearchQuerySchema,
+  type FlightSearchQueryRaw,
+  type FlightSearchResponse,
 } from './flight.schema';
 import { searchFlights } from './flight.service';
 
@@ -13,24 +14,17 @@ flightRoutes.get<
   never,
   FlightSearchResponse | ApiError,
   never,
-  FlightSearchQueryParsed
+  FlightSearchQueryRaw
 >('/search', async (req, res) => {
-  const { minDepartureTime, maxDepartureTime, maxDuration, preferredAirline } =
-    req.query;
-
-  const parsedMaxDuration = Number(maxDuration);
-  if (!Number.isFinite(parsedMaxDuration) || parsedMaxDuration < 0) {
+  const parsed = FlightSearchQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
     return res
       .status(400)
-      .json({ error: 'maxDuration must be a positive number' });
+      .json({ error: z.flattenError(parsed.error).fieldErrors });
   }
-  const filters: FlightSearchFilters = {
-    maxDuration: parsedMaxDuration,
-    minDepartureTime: minDepartureTime,
-    maxDepartureTime: maxDepartureTime,
-  };
 
-  const flights = await searchFlights({ filters, preferredAirline });
+  const { preferredAirline, ...filters } = parsed.data;
+  const flights = await searchFlights({ preferredAirline, filters });
 
   res.json({
     count: flights.length,
