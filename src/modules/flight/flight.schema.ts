@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-const isoDateTimeCoerce = z.iso.datetime().pipe(z.coerce.date());
+const isoDateTimeCoerce = z.iso
+  .datetime({
+    error:
+      "Invalid date format: must be a valid ISO 8601 date. Example: '2026-01-01T00:00:00Z'.",
+  })
+  .pipe(z.coerce.date());
 
 export const FlightSchema = z.object({
   carrier: z.string(),
@@ -13,7 +18,14 @@ export const FlightSchema = z.object({
 export const FlightsSchema = z.array(FlightSchema);
 
 export const FlightSearchQuerySchema = z.object({
-  maxDuration: z.coerce.number<string>().positive().optional(),
+  maxDuration: z.coerce
+    .number<string>({
+      error: 'Invalid input: must be a valid number.',
+    })
+    .positive({
+      error: 'Invalid input: must be a positive number.',
+    })
+    .optional(),
   minDepartureTime: isoDateTimeCoerce.optional(),
   maxDepartureTime: isoDateTimeCoerce.optional(),
   preferredAirline: z.string().optional(),
