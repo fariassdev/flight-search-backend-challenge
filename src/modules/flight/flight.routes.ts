@@ -12,7 +12,7 @@ flightRoutes.get(
   '/search',
   withValidatedQuery(
     FlightSearchQuerySchema,
-    async (_req, res: Response<FlightSearchResponse>, _next, query) => {
+    async (_req, res: Response<FlightSearchResponse>, query) => {
       const { preferredAirline, ...filters } = query;
       const flights = await searchFlights({ preferredAirline, filters });
 
