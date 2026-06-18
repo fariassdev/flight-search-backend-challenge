@@ -1,39 +1,25 @@
-import { Router } from 'express';
-import type { ApiError } from '../../shared/errors/api';
-import type {
-  FlightSearchFilters,
-  FlightSearchQueryParsed,
-  FlightSearchResponse,
+import { Router, type Response } from 'express';
+import { withValidatedQuery } from '../../shared/middleware/queryValidation';
+import {
+  FlightSearchQuerySchema,
+  type FlightSearchResponse,
 } from './flight.schema';
 import { searchFlights } from './flight.service';
 
 export const flightRoutes = Router();
 
-flightRoutes.get<
-  never,
-  FlightSearchResponse | ApiError,
-  never,
-  FlightSearchQueryParsed
->('/search', async (req, res) => {
-  const { minDepartureTime, maxDepartureTime, maxDuration, preferredAirline } =
-    req.query;
+flightRoutes.get(
+  '/search',
+  withValidatedQuery(
+    FlightSearchQuerySchema,
+    async (_req, res: Response<FlightSearchResponse>, _next, query) => {
+      const { preferredAirline, ...filters } = query;
+      const flights = await searchFlights({ preferredAirline, filters });
 
-  const parsedMaxDuration = Number(maxDuration);
-  if (!Number.isFinite(parsedMaxDuration) || parsedMaxDuration < 0) {
-    return res
-      .status(400)
-      .json({ error: 'maxDuration must be a positive number' });
-  }
-  const filters: FlightSearchFilters = {
-    maxDuration: parsedMaxDuration,
-    minDepartureTime: minDepartureTime,
-    maxDepartureTime: maxDepartureTime,
-  };
-
-  const flights = await searchFlights({ filters, preferredAirline });
-
-  res.json({
-    count: flights.length,
-    flights,
-  });
-});
+      res.json({
+        count: flights.length,
+        flights,
+      });
+    },
+  ),
+);
