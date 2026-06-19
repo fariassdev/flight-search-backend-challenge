@@ -1,16 +1,24 @@
 import { createApp } from './app';
 import { envConfig } from './config/env';
+import { logger } from './shared/lib/logger';
 
 const app = createApp();
 
 const server = app.listen(envConfig.PORT, () => {
-  console.log(`Server running on port ${envConfig.PORT}`);
+  logger.info({ port: envConfig.PORT }, 'Server started');
 });
 
-function shutdown() {
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(1), 10_000).unref();
+function shutdown(signal: string) {
+  logger.info({ signal }, 'Shutting down');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10_000).unref();
 }
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
