@@ -67,4 +67,57 @@ describe('GET /api/flights/search', () => {
     expect(filtered.body.count).toBeLessThan(unfiltered.body.count);
     expect(filtered.body.count).toBe(2);
   });
+
+  describe('validation errors', () => {
+    it('should return a validation error when minDepartureTime is not a valid ISO date', async () => {
+      const response = await request(app)
+        .get('/api/flights/search?minDepartureTime=not-a-date')
+        .expect(400)
+        .expect('Content-Type', /application\/problem\+json/);
+
+      expect(response.body).toMatchObject({
+        code: 'validation_failed',
+        status: 400,
+        errors: {
+          minDepartureTime: expect.arrayContaining([
+            expect.stringContaining('Invalid date format'),
+          ]),
+        },
+      });
+    });
+
+    it('should return a validation error when maxDepartureTime is not a valid ISO date', async () => {
+      const response = await request(app)
+        .get('/api/flights/search?maxDepartureTime=not-a-date')
+        .expect(400)
+        .expect('Content-Type', /application\/problem\+json/);
+
+      expect(response.body).toMatchObject({
+        code: 'validation_failed',
+        status: 400,
+        errors: {
+          maxDepartureTime: expect.arrayContaining([
+            expect.stringContaining('Invalid date format'),
+          ]),
+        },
+      });
+    });
+
+    it('should return a validation error when maxDuration is not a valid number', async () => {
+      const response = await request(app)
+        .get('/api/flights/search?maxDuration=not-a-number')
+        .expect(400)
+        .expect('Content-Type', /application\/problem\+json/);
+
+      expect(response.body).toMatchObject({
+        code: 'validation_failed',
+        status: 400,
+        errors: {
+          maxDuration: expect.arrayContaining([
+            expect.stringContaining('Invalid input'),
+          ]),
+        },
+      });
+    });
+  });
 });
