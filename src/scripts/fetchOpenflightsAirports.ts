@@ -2,15 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import type { ZodError } from 'zod';
+import { envConfig } from '../config/env';
 import {
   AirportSchema,
   AirportsJsonSchema,
   type Airport,
   type AirportsJson,
 } from '../modules/airport/airport.schema';
-
-const AIRPORTS_DAT_URL =
-  'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
 const OUTPUT_PATH = path.join(process.cwd(), 'src', 'data', 'airports.json');
 const ERROR_LOG_PATH = path.join(
   process.cwd(),
@@ -48,7 +46,7 @@ function castOpenFlightsValue(value: string): string | null {
 }
 
 async function fetchOpenFlightsAirports(): Promise<string> {
-  const response = await fetch(AIRPORTS_DAT_URL);
+  const response = await fetch(envConfig.OPENFLIGHTS_AIRPORT_DATA_URL);
   if (!response.ok) {
     throw new Error(
       `Failed to download airports.dat: ${response.status} ${response.statusText}`,
@@ -144,7 +142,9 @@ function writeJson(filePath: string, data: Record<string, unknown>): void {
 }
 
 async function main() {
-  console.log(`Downloading airports.dat from ${AIRPORTS_DAT_URL}`);
+  console.log(
+    `Downloading airports.dat from ${envConfig.OPENFLIGHTS_AIRPORT_DATA_URL}`,
+  );
   const rawOpenFlightsAirports = await fetchOpenFlightsAirports();
   const openFlightsAirports = parseOpenFlightsAirports(rawOpenFlightsAirports);
   const { airports, errors } = mapOpenFlightsToAirports(openFlightsAirports);
