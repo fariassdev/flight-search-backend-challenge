@@ -102,4 +102,104 @@ describe('searchFlights', () => {
       });
     }
   });
+
+  describe('filtering flights', () => {
+    it('should exclude flights longer than maxDuration when maxDuration is provided', async () => {
+      const flights = [
+        buildFlight('AA', '2026-06-01T08:00:00Z', 3),
+        buildFlight('BB', '2026-06-01T14:00:00Z', 6),
+        buildFlight('CC', '2026-06-01T18:00:00Z', 4),
+        buildFlight('DD', '2026-06-01T22:00:00Z', 5),
+      ];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({ filters: { maxDuration: 4 } });
+
+      expect(results).toHaveLength(2);
+      expect(results.map((flight) => flight.duration)).toEqual([3, 4]);
+    });
+
+    it('should exclude flights departing before minDepartureTime when minDepartureTime is provided', async () => {
+      const minDepartureTime = new Date('2026-06-01T12:00:00Z');
+      const flights = [
+        buildFlight('AA', '2026-06-01T08:00:00Z', 3),
+        buildFlight('BB', '2026-06-01T14:00:00Z', 6),
+        buildFlight('CC', '2026-06-01T18:00:00Z', 4),
+        buildFlight('DD', '2026-06-01T22:00:00Z', 5),
+      ];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({ filters: { minDepartureTime } });
+
+      expect(results).toHaveLength(3);
+      expect(
+        results.every((flight) => flight.departureTime >= minDepartureTime),
+      ).toBe(true);
+    });
+
+    it('should exclude flights departing after maxDepartureTime when maxDepartureTime is provided', async () => {
+      const maxDepartureTime = new Date('2026-06-01T20:00:00Z');
+      const flights = [
+        buildFlight('AA', '2026-06-01T08:00:00Z', 3),
+        buildFlight('BB', '2026-06-01T14:00:00Z', 6),
+        buildFlight('CC', '2026-06-01T18:00:00Z', 4),
+        buildFlight('DD', '2026-06-01T22:00:00Z', 5),
+      ];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({ filters: { maxDepartureTime } });
+
+      expect(results).toHaveLength(3);
+      expect(
+        results.every((flight) => flight.departureTime <= maxDepartureTime),
+      ).toBe(true);
+    });
+
+    it('should include flights departing exactly at maxDepartureTime when maxDepartureTime is provided', async () => {
+      const maxDepartureTimeIso = '2026-06-01T20:00:00Z';
+      const maxDepartureTime = new Date(maxDepartureTimeIso);
+      const flights = [buildFlight('AA', maxDepartureTimeIso, 5)];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({ filters: { maxDepartureTime } });
+
+      expect(results).toHaveLength(1);
+    });
+
+    it('should include flights departing exactly at minDepartureTime when minDepartureTime is provided', async () => {
+      const minDepartureTimeIso = '2026-06-01T20:00:00Z';
+      const minDepartureTime = new Date(minDepartureTimeIso);
+      const flights = [buildFlight('AA', minDepartureTimeIso, 5)];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({ filters: { minDepartureTime } });
+
+      expect(results).toHaveLength(1);
+    });
+
+    it('should apply all active filters when multiple filter params are provided', async () => {
+      const minDepartureTime = new Date('2026-06-01T12:00:00Z');
+      const maxDepartureTime = new Date('2026-06-01T20:00:00Z');
+      const maxDuration = 5;
+      const flightMeetingAllCriteria = buildFlight(
+        'DD',
+        '2026-06-01T18:00:00Z',
+        4,
+      );
+      const flights = [
+        buildFlight('AA', '2026-06-01T08:00:00Z', 3),
+        buildFlight('BB', '2026-06-01T14:00:00Z', 6),
+        buildFlight('CC', '2026-06-01T22:00:00Z', 5),
+        flightMeetingAllCriteria,
+      ];
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue(flights);
+
+      const results = await searchFlights({
+        filters: { maxDuration, minDepartureTime, maxDepartureTime },
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject(flightMeetingAllCriteria);
+    });
+  });
 });
