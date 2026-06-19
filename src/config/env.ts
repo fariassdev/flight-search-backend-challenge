@@ -4,21 +4,48 @@ import { loadEnvFile } from 'node:process';
 import { z } from 'zod';
 
 const DEFAULTS = {
-  FLIGHT_DATA_URL:
-    'https://gist.githubusercontent.com/bgdavidx/132a9e3b9c70897bc07cfa5ca25747be/raw/8dbbe1db38087fad4a8c8ade48e741d6fad8c872/gistfile1.txt',
+  CORS_ALLOWED_ORIGINS: ['http://localhost:3001'],
+  CORS_METHODS: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  CORS_ALLOWED_HEADERS: ['Content-Type'],
   OPENFLIGHTS_AIRPORT_DATA_URL:
     'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat',
+  FLIGHT_DATA_URL:
+    'https://gist.githubusercontent.com/bgdavidx/132a9e3b9c70897bc07cfa5ca25747be/raw/8dbbe1db38087fad4a8c8ade48e741d6fad8c872/gistfile1.txt',
 } as const;
 
+function commaSeparated(defaults: readonly string[]) {
+  return z
+    .string()
+    .optional()
+    .transform((value) =>
+      value
+        ? value
+            .split(',')
+            .map((part) => part.trim())
+            .filter(Boolean)
+        : [...defaults],
+    );
+}
+
+const memoryLimit = z.stringFormat('memory-size', /^\d+(?:kb)$/i, {
+  error: (err) =>
+    `The value "${err.input}" is not a valid memory size. It must be a positive integer followed by "kb" (e.g., "100kb").`,
+});
+
 export const EnvConfigSchema = z.object({
+  BODY_PARSER_JSON_LIMIT: memoryLimit.default('100kb'),
+  BODY_PARSER_URLENCODED_LIMIT: memoryLimit.default('100kb'),
+  CORS_ALLOWED_ORIGINS: commaSeparated(DEFAULTS.CORS_ALLOWED_ORIGINS),
+  CORS_METHODS: commaSeparated(DEFAULTS.CORS_METHODS),
+  CORS_ALLOWED_HEADERS: commaSeparated(DEFAULTS.CORS_ALLOWED_HEADERS),
+  FLIGHT_DATA_URL: z.url().default(DEFAULTS.FLIGHT_DATA_URL),
   NODE_ENV: z
     .enum(['development', 'staging', 'production', 'test'])
     .default('development'),
-  PORT: z.coerce.number().positive().default(3000),
   OPENFLIGHTS_AIRPORT_DATA_URL: z
     .url()
     .default(DEFAULTS.OPENFLIGHTS_AIRPORT_DATA_URL),
-  FLIGHT_DATA_URL: z.url().default(DEFAULTS.FLIGHT_DATA_URL),
+  PORT: z.coerce.number().positive().default(3000),
 });
 
 function loadEnvFiles(): void {
