@@ -45,6 +45,9 @@ export const EnvConfigSchema = z.object({
   OPENFLIGHTS_AIRPORT_DATA_URL: z
     .url()
     .default(DEFAULTS.OPENFLIGHTS_AIRPORT_DATA_URL),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .optional(),
   PORT: z.coerce.number().positive().default(3000),
 });
 
