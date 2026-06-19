@@ -72,7 +72,7 @@ function scoreFlights(
 }
 
 function sortByScore(flights: ScoredFlight[]) {
-  return [...flights].sort((a, b) => a.score - b.score);
+  return flights.toSorted((a, b) => a.score - b.score);
 }
 
 export async function searchFlights(options: {
