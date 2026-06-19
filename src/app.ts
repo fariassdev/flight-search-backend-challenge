@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import { envConfig } from './config/env';
 import { flightRoutes } from './modules/flight/flight.routes';
@@ -16,6 +16,8 @@ export function createApp() {
       allowedHeaders: envConfig.CORS_ALLOWED_HEADERS,
     }),
   );
+  app.use(json({ limit: envConfig.BODY_PARSER_JSON_LIMIT }));
+  app.use(urlencoded({ limit: envConfig.BODY_PARSER_URLENCODED_LIMIT }));
 
   app.use('/api/flights', flightRoutes);
   app.use(errorHandler);

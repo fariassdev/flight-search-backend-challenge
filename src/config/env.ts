@@ -27,7 +27,14 @@ function commaSeparated(defaults: readonly string[]) {
     );
 }
 
+const memoryLimit = z.stringFormat('memory-size', /^\d+(?:kb)$/i, {
+  error: (err) =>
+    `The value "${err.input}" is not a valid memory size. It must be a positive integer followed by "kb" (e.g., "100kb").`,
+});
+
 export const EnvConfigSchema = z.object({
+  BODY_PARSER_JSON_LIMIT: memoryLimit.default('100kb'),
+  BODY_PARSER_URLENCODED_LIMIT: memoryLimit.default('100kb'),
   CORS_ALLOWED_ORIGINS: commaSeparated(DEFAULTS.CORS_ALLOWED_ORIGINS),
   CORS_METHODS: commaSeparated(DEFAULTS.CORS_METHODS),
   CORS_ALLOWED_HEADERS: commaSeparated(DEFAULTS.CORS_ALLOWED_HEADERS),
