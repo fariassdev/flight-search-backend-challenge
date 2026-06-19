@@ -1,8 +1,10 @@
 import cors from 'cors';
 import express, { json, urlencoded } from 'express';
 import helmet from 'helmet';
+import { pinoHttp } from 'pino-http';
 import { envConfig } from './config/env';
 import { flightRoutes } from './modules/flight/flight.routes';
+import { logger } from './shared/lib/logger';
 import { errorHandler } from './shared/middleware/errorHandler';
 
 export function createApp() {
@@ -16,6 +18,8 @@ export function createApp() {
       allowedHeaders: envConfig.CORS_ALLOWED_HEADERS,
     }),
   );
+  app.use(pinoHttp({ logger }));
+
   app.use(json({ limit: envConfig.BODY_PARSER_JSON_LIMIT }));
   app.use(urlencoded({ limit: envConfig.BODY_PARSER_URLENCODED_LIMIT }));
 
