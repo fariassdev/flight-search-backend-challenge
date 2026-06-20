@@ -1,3 +1,4 @@
+import { apiReference } from '@scalar/express-api-reference';
 import cors from 'cors';
 import express, { json, urlencoded } from 'express';
 import helmet from 'helmet';
@@ -5,6 +6,7 @@ import { pinoHttp } from 'pino-http';
 import { envConfig } from './config/env';
 import { flightRoutes } from './modules/flight/flight.routes';
 import { generateOpenApiDocument } from './openapi/document';
+import { scalarConfig, scalarHelmetConfig } from './openapi/scalar';
 import { logger } from './shared/lib/logger';
 import { errorHandler } from './shared/middleware/errorHandler';
 
@@ -29,6 +31,8 @@ export function createApp() {
   app.get('/openapi.json', (_req, res) => {
     res.json(generateOpenApiDocument());
   });
+
+  app.use('/docs', helmet(scalarHelmetConfig), apiReference(scalarConfig));
 
   app.use(errorHandler);
 
