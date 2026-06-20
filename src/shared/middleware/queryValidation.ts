@@ -1,7 +1,7 @@
 import type { Request, Response, RequestHandler } from 'express';
 import type { ZodType } from 'zod';
 import { z } from 'zod';
-import { ValidationError } from '../errors/api';
+import { ValidationError } from '../errors/http';
 
 type QueryHandler<T> = (
   req: Request,

@@ -1,10 +1,10 @@
-export class AppError extends Error {
+export class HttpError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
     public readonly title: string,
     public readonly detail: string,
-    public readonly extras: Record<string, unknown> = {},
+    public readonly errors: Record<string, unknown> = {},
   ) {
     super(detail);
     Object.setPrototypeOf(this, new.target.prototype);
@@ -17,12 +17,12 @@ export class AppError extends Error {
       status: this.status,
       detail: this.detail,
       instance,
-      ...this.extras,
+      errors: this.errors,
     };
   }
 }
 
-export class ValidationError extends AppError {
+export class ValidationError extends HttpError {
   constructor(errors: Record<string, string[] | undefined>) {
     const count = Object.keys(errors).length;
     super(
@@ -30,19 +30,18 @@ export class ValidationError extends AppError {
       'validation_failed',
       'Validation Failed',
       `${count} field(s) failed validation.`,
-      { errors },
+      errors,
     );
   }
 }
 
-export class InternalServerError extends AppError {
-  constructor(details?: string, extras?: Record<string, unknown>) {
+export class InternalServerError extends HttpError {
+  constructor(detail?: string) {
     super(
       500,
       'internal_server_error',
       'Internal Server Error',
-      details ?? 'An unexpected error occurred while processing the request.',
-      extras,
+      detail ?? 'An unexpected error occurred while processing the request.',
     );
   }
 }
