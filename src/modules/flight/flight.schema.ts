@@ -17,6 +17,12 @@ export const FlightSchema = z.object({
 
 export const FlightsSchema = z.array(FlightSchema);
 
+export const ScoredFlightSchema = FlightSchema.extend({
+  duration: z.number().positive(),
+  distance: z.number().positive().nullable(),
+  score: z.number().positive(),
+});
+
 export const FlightSearchQuerySchema = z.object({
   maxDuration: z.coerce
     .number<string>({
@@ -31,21 +37,17 @@ export const FlightSearchQuerySchema = z.object({
   preferredAirline: z.string().optional(),
 });
 
+export const FlightSearchResponseSchema = z.object({
+  count: z.number().positive(),
+  flights: z.array(ScoredFlightSchema),
+});
+
 export type Flight = z.infer<typeof FlightSchema>;
+export type ScoredFlight = z.infer<typeof ScoredFlightSchema>;
 export type FlightSearchQueryRaw = z.input<typeof FlightSearchQuerySchema>;
 export type FlightSearchQueryParsed = z.output<typeof FlightSearchQuerySchema>;
 export type FlightSearchFilters = Omit<
   FlightSearchQueryParsed,
   'preferredAirline'
 >;
-
-export interface ScoredFlight extends Flight {
-  duration: number;
-  distance: number | null;
-  score: number;
-}
-
-export interface FlightSearchResponse {
-  count: number;
-  flights: ScoredFlight[];
-}
+export type FlightSearchResponse = z.infer<typeof FlightSearchResponseSchema>;
