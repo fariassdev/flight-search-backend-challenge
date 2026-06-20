@@ -4,13 +4,15 @@ import { loadEnvFile } from 'node:process';
 import { z } from 'zod';
 
 const DEFAULTS = {
+  API_BASE_URL: 'http://localhost:3000',
   CORS_ALLOWED_ORIGINS: ['http://localhost:3001'],
   CORS_METHODS: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   CORS_ALLOWED_HEADERS: ['Content-Type'],
-  OPENFLIGHTS_AIRPORT_DATA_URL:
-    'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat',
   FLIGHT_DATA_URL:
     'https://gist.githubusercontent.com/bgdavidx/132a9e3b9c70897bc07cfa5ca25747be/raw/8dbbe1db38087fad4a8c8ade48e741d6fad8c872/gistfile1.txt',
+  OPENFLIGHTS_AIRPORT_DATA_URL:
+    'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat',
+  PORT: 3000,
 } as const;
 
 function commaSeparated(defaults: readonly string[]) {
@@ -33,6 +35,7 @@ const memoryLimit = z.stringFormat('memory-size', /^\d+(?:kb)$/i, {
 });
 
 export const EnvConfigSchema = z.object({
+  API_BASE_URL: z.url().default(DEFAULTS.API_BASE_URL),
   BODY_PARSER_JSON_LIMIT: memoryLimit.default('100kb'),
   BODY_PARSER_URLENCODED_LIMIT: memoryLimit.default('100kb'),
   CORS_ALLOWED_ORIGINS: commaSeparated(DEFAULTS.CORS_ALLOWED_ORIGINS),
@@ -48,7 +51,7 @@ export const EnvConfigSchema = z.object({
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .optional(),
-  PORT: z.coerce.number().positive().default(3000),
+  PORT: z.coerce.number().positive().default(DEFAULTS.PORT),
 });
 
 function loadEnvFiles(): void {

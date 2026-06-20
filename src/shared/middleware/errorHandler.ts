@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
-import { AppError, InternalServerError } from '../errors/api';
+import { HttpError, InternalServerError } from '../errors/http';
 
 function toError(value: unknown): Error {
   if (value instanceof Error) return value;
@@ -15,7 +15,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   const error = toError(err);
 
-  if (error instanceof AppError) {
+  if (error instanceof HttpError) {
     const payload = { err: error, code: error.code, status: error.status };
     if (error.status >= 500) {
       req.log.error(payload, error.detail ?? error.message);

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { envConfig } from './config/env';
 import { flightRoutes } from './modules/flight/flight.routes';
+import { generateOpenApiDocument } from './openapi/document';
 import { logger } from './shared/lib/logger';
 import { errorHandler } from './shared/middleware/errorHandler';
 
@@ -24,6 +25,12 @@ export function createApp() {
   app.use(urlencoded({ limit: envConfig.BODY_PARSER_URLENCODED_LIMIT }));
 
   app.use('/api/flights', flightRoutes);
+
+  app.get('/openapi.json', (_req, res) => {
+    res.json(generateOpenApiDocument());
+  });
+
   app.use(errorHandler);
+
   return app;
 }
