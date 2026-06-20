@@ -30,6 +30,7 @@ const helmetMiddleware = helmet({
 const scalarHandler = apiReference({
   content: generateOpenApiDocument,
   theme: 'purple',
+  pageTitle: 'Flight Search API Docs',
   hideClientButton: true,
   agent: {
     disabled: true,
