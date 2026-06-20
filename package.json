@@ -26,6 +26,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@scalar/express-api-reference": "0.10.4",
     "@asteasolutions/zod-to-openapi": "8.5.0",
     "cors": "2.8.6",
     "express": "5.2.1",
