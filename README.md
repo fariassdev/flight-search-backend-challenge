@@ -105,13 +105,17 @@ The same modular shape pays off in the **tests**: pure logic (haversine, filter/
 
 These are the things I'd want in a real service. Each one is an atomic PR, easy to review, easy to revert.
 
-### Error handling middleware (#35, improved in #37)
+<details>
+<summary><b>Error handling middleware</b> (#35, improved in #37)</summary>
 
 A single error-handling middleware registered last. Anywhere in the request path I just `throw` a typed `HttpError` subclass (e.g. `ValidationError`, `InternalServerError`); the middleware turns it into an RFC 7807 `application/problem+json` response, logs 5xx as `error` and 4xx as `warn`, and collapses anything unexpected into a generic 500 without leaking internals. This is the right place to handle errors because formatting lives in exactly one spot and the handlers stay focused on the happy path with one consistent error contract.
 
 In #35 I moved from handling errors inline in each handler (with `res.status().json()`) to forwarding them via `next(new ValidationError(...))` so the centralized middleware takes care of formatting. The Express 5 upgrade in #37 simplified this further: I could just `throw` instead of calling `next(err)`, and drop the `next` parameter from the handlers entirely.
 
-### Type-safe query validation (#33)
+</details>
+
+<details>
+<summary><b>Type-safe query validation</b> (#33)</summary>
 
 I validate query params with a small handler wrapper, `withValidatedQuery(schema, handler)`, instead of a plain middleware. It was the best option I found that is, at the same time:
 
@@ -121,22 +125,39 @@ I validate query params with a small handler wrapper, `withValidatedQuery(schema
 
 The alternatives I considered were mutating `req.query` from a middleware or extending the Express `Request` interface with TypeScript module augmentation. Both were weaker on type safety because I had to type the parsed query as `unknown` or `Record<string, unknown>` and couldn't get full type inference at the route layer.
 
-### Centralized, validated config (#42)
+</details>
+
+<details>
+<summary><b>Centralized, validated config</b> (#42)</summary>
 
 All configuration is read once at startup into a single typed `envConfig` object, validated by Zod. Bad config fails fast with readable field errors instead of blowing up at runtime. It loads `.env` then `.env.<NODE_ENV>` using Node's native `loadEnvFile()`, so no `dotenv` dependency needed. This only became possible after the Node upgrade in #40.
 
-### Express hardening (#45)
+</details>
+
+<details>
+<summary><b>Express hardening</b> (#45)</summary>
 
 Minimal but production-minded HTTP defaults: `helmet`, env-driven CORS, bounded body parsers, and graceful shutdown with a forced-exit fallback.
 
-### Structured logging (#51)
+</details>
+
+<details>
+<summary><b>Structured logging</b> (#51)</summary>
 
 Centralized logging with Pino + `pino-http`. One logger module, a per-request logger (`req.log`), env-aware levels (silent in tests, pretty in dev, JSON in prod). No scattered `console.log`.
 
-### Developer experience and code quality
+</details>
+
+<details>
+<summary><b>Developer experience and code quality</b> (#23, #24, #27, #28)</summary>
 
 ESLint, Prettier, and Husky + lint-staged run lint/format on commit, with commitlint enforcing conventional commits. `.editorconfig` and `.gitattributes` ensure consistent formatting and line endings across editors and OS. This keeps diffs clean, history semantic, and catches problems before they land.
 
-### Reproducible environment (#40, #47)
+</details>
+
+<details>
+<summary><b>Reproducible environment</b> (#40, #47)</summary>
 
 Pinning the runtime and dependencies matters so the project behaves the same on every machine and in CI. I pin Node with `.nvmrc` + `engines` + `engine-strict=true` (npm refuses the wrong Node), and pin exact dependency versions with `save-exact=true` so new installs don't drift into caret ranges. The lockfile is committed too.
+
+</details>
