@@ -31,7 +31,9 @@ export function createApp() {
     res.json(generateOpenApiDocument());
   });
 
-  app.use('/docs', docsRoute);
+  if (envConfig.NODE_ENV !== 'production') {
+    app.use('/docs', docsRoute);
+  }
 
   app.use(errorHandler);
 
