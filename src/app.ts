@@ -5,6 +5,7 @@ import { pinoHttp } from 'pino-http';
 import { envConfig } from './config/env';
 import { flightRoutes } from './modules/flight/flight.routes';
 import { generateOpenApiDocument } from './openapi/document';
+import { docsRoute } from './openapi/openapi.routes';
 import { logger } from './shared/lib/logger';
 import { errorHandler } from './shared/middleware/errorHandler';
 
@@ -26,9 +27,13 @@ export function createApp() {
 
   app.use('/api/flights', flightRoutes);
 
-  app.get('/openapi.json', (_req, res) => {
-    res.json(generateOpenApiDocument());
-  });
+  if (envConfig.NODE_ENV !== 'production') {
+    app.get('/openapi.json', (_req, res) => {
+      res.json(generateOpenApiDocument());
+    });
+
+    app.use('/docs', docsRoute);
+  }
 
   app.use(errorHandler);
 
