@@ -69,3 +69,18 @@ The core use was for issue and PR descriptions: Cursor or GitHub Copilot's "Summ
 For research I used Perplexity as my main search engine. It was really useful when I needed to compare approaches, for example when choosing how to generate the OpenAPI spec. I looked into [tsoa](https://github.com/lukeautry/tsoa), [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc), [zod-to-openapi](https://github.com/samchungy/zod-openapi) and [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi), gathered the trade-offs through Perplexity, and made an informed decision based on my own criteria after having all the context.
 
 Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed.
+
+## Architecture and project structure
+
+I moved away from the original monolithic `server.ts` into a modular layout in #16 and kept that shape from there on. Each file has a single responsibility, and the Express app creation is decoupled from the server binding: `createApp()` builds and wires the app, `server.ts` only binds the port and owns the process lifecycle (graceful shutdown, signals). That split (done in #31) is what makes the HTTP tests possible without ever opening a socket.
+
+| Layer      | Files             | Responsibility                                         |
+| ---------- | ----------------- | ------------------------------------------------------ |
+| Server     | `server.ts`       | Bind port, lifecycle (graceful shutdown, signals)      |
+| App        | `app.ts`          | Build Express app, wire middleware and routes          |
+| Routes     | `*.routes.ts`     | Define endpoints, validate query, type the response    |
+| Service    | `*.service.ts`    | Business logic: filter/score/sort, distance            |
+| Repository | `*.repository.ts` | Data access: fetch flights, airport lookup             |
+| Schema     | `*.schema.ts`     | Zod schemas = validation + inferred types at the edges |
+| Shared     | `shared/**`       | Errors, middleware, logger, haversine                  |
+| Config     | `config/env.ts`   | Typed env, validated once at startup                   |
