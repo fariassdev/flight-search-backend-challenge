@@ -27,26 +27,26 @@ The bug was in `scoreAndSortFlights`: preferred airline flights were scored corr
 - Score: `duration × 0.9` for preferred carrier, else `duration × 1.0`
 - Sort: Ascending by score (lower is better)
 
-I separated scoring and sorting into `scoreFlights` and `sortByScore` to follow single responsibility and avoid mutating the input. #1, #3
+I separated scoring and sorting into `scoreFlights` and `sortByScore` to follow single responsibility and avoid mutating the input. [#1](https://github.com/fariassdev/flight-search-backend-challenge/pull/1), [#3](https://github.com/fariassdev/flight-search-backend-challenge/pull/3)
 
 ### Task B - Filters
 
-I added optional query parameters: `maxDuration`, `minDepartureTime`, and `maxDepartureTime`. The final implementation in #33 uses a Zod schema to treat them as optional, coerce types, and return clean validation errors. I also added a check in #58 to guarantee that `maxDepartureTime` is after `minDepartureTime`.
+I added optional query parameters: `maxDuration`, `minDepartureTime`, and `maxDepartureTime`. The final implementation in [#33](https://github.com/fariassdev/flight-search-backend-challenge/pull/33) uses a Zod schema to treat them as optional, coerce types, and return clean validation errors. I also added a check in [#58](https://github.com/fariassdev/flight-search-backend-challenge/pull/58) to guarantee that `maxDepartureTime` is after `minDepartureTime`.
 
 ### Task C - Real distance
 
-For the airport data, I wrote a script (`npm run fetch-airports`) to download the OpenFlights dataset, validate rows with Zod, and build a JSON map for O(1) lookup. Since the dataset hasn't changed in years, I committed the pre-processed `airports.json` instead of fetching it on every startup. #12
+For the airport data, I wrote a script (`npm run fetch-airports`) to download the OpenFlights dataset, validate rows with Zod, and build a JSON map for O(1) lookup. Since the dataset hasn't changed in years, I committed the pre-processed `airports.json` instead of fetching it on every startup. [#12](https://github.com/fariassdev/flight-search-backend-challenge/pull/12)
 
-For the distance calculation, I used TDD to implement `haversineDistanceMiles` and calibrated it against [this online calculator](https://www.airmilescalculator.com/). The function is pure math; validation happens at the boundaries. If an airport code is missing or unknown, `getDistanceBetweenAirports` returns `null` instead of throwing so the flight still shows up in results. #17, #20
+For the distance calculation, I used TDD to implement `haversineDistanceMiles` and calibrated it against [this online calculator](https://www.airmilescalculator.com/). The function is pure math; validation happens at the boundaries. If an airport code is missing or unknown, `getDistanceBetweenAirports` returns `null` instead of throwing so the flight still shows up in results. [#17](https://github.com/fariassdev/flight-search-backend-challenge/pull/17), [#20](https://github.com/fariassdev/flight-search-backend-challenge/pull/20)
 
-I applied this "Zod at the boundaries" pattern everywhere: query parameters, upstream flights feed, startup environment variables, and airport data. If anything is invalid at the edge, it fails fast and returns 400 with `application/problem+json`. #33, #35
+I applied this "Zod at the boundaries" pattern everywhere: query parameters, upstream flights feed, startup environment variables, and airport data. If anything is invalid at the edge, it fails fast and returns 400 with `application/problem+json`. [#33](https://github.com/fariassdev/flight-search-backend-challenge/pull/33), [#35](https://github.com/fariassdev/flight-search-backend-challenge/pull/35)
 
 ### Testing
 
 - **Unit tests:** Cover pure logic (haversine formula, filtering/sorting, and airport distance mapping).
 - **HTTP tests (supertest):** Verify routes, validation rules, error handling, and response schemas.
 
-Airport service tests use the real `airports.json` but mock the haversine formula. Flight service tests mock the airport service to keep tests isolated. #14, #49, #58
+Airport service tests use the real `airports.json` but mock the haversine formula. Flight service tests mock the airport service to keep tests isolated. [#14](https://github.com/fariassdev/flight-search-backend-challenge/pull/14), [#49](https://github.com/fariassdev/flight-search-backend-challenge/pull/49), [#58](https://github.com/fariassdev/flight-search-backend-challenge/pull/58)
 
 ## Assumptions
 
@@ -56,11 +56,11 @@ Airport service tests use the real `airports.json` but mock the haversine formul
 
 ## Workflow
 
-I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. I focused on getting working software first, keeping PRs and commits atomic. Once the core challenge was complete (#1 to #20), I shifted to production-ready improvements (error handling, logging, environment safety, etc.), layering them in one clean PR at a time (#23 to #58).
+I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. I focused on getting working software first, keeping PRs and commits atomic. Once the core challenge was complete ([#1](https://github.com/fariassdev/flight-search-backend-challenge/pull/1) to [#20](https://github.com/fariassdev/flight-search-backend-challenge/pull/20)), I shifted to production-ready improvements (error handling, logging, environment safety, etc.), layering them in one clean PR at a time ([#23](https://github.com/fariassdev/flight-search-backend-challenge/pull/23) to [#58](https://github.com/fariassdev/flight-search-backend-challenge/pull/58)).
 
 ## Architecture and project structure
 
-I modularized the monolithic `server.ts` in #16. Express setup is decoupled from port binding: `createApp()` builds and wires the application, while `server.ts` handles the process lifecycle (graceful shutdown, signal handling). This split (done in #31) allows us to run HTTP tests without opening sockets.
+I modularized the monolithic `server.ts` in [#16](https://github.com/fariassdev/flight-search-backend-challenge/pull/16). Express setup is decoupled from port binding: `createApp()` builds and wires the application, while `server.ts` handles the process lifecycle (graceful shutdown, signal handling). This split (done in [#31](https://github.com/fariassdev/flight-search-backend-challenge/pull/31)) allows us to run HTTP tests without opening sockets.
 
 | Layer      | Files             | Responsibility                                           |
 | ---------- | ----------------- | -------------------------------------------------------- |
@@ -94,75 +94,68 @@ flowchart TD
 
 ## Making it production-ready
 
-These are the things I'd want in a real service. Each one is an atomic PR, easy to review, easy to revert.
+These additions reflect the standards I expect in a real production service. Each was introduced in its own atomic PR.
 
 <details>
-<summary><b>Error handling middleware</b> (#35, improved in #37)</summary>
+<summary><b>Error handling middleware</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/35">#35</a>, improved in <a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/37">#37</a>)</summary>
 
-A single error-handling middleware registered last. Anywhere in the request path I just `throw` a typed `HttpError` subclass (e.g. `ValidationError`, `InternalServerError`); the middleware turns it into an RFC 7807 `application/problem+json` response, logs 5xx as `error` and 4xx as `warn`, and collapses anything unexpected into a generic 500 without leaking internals. This is the right place to handle errors because formatting lives in exactly one spot and the handlers stay focused on the happy path with one consistent error contract.
+A centralized middleware maps any thrown `HttpError` (e.g., `ValidationError`, `InternalServerError`) into an RFC 7807 `application/problem+json` response, logs error levels accordingly, and hides internal details for unhandled 500s.
 
-In #35 I moved from handling errors inline in each handler (with `res.status().json()`) to forwarding them via `next(new ValidationError(...))` so the centralized middleware takes care of formatting. The Express 5 upgrade in #37 simplified this further: I could just `throw` instead of calling `next(err)`, and drop the `next` parameter from the handlers entirely.
+In [#35](https://github.com/fariassdev/flight-search-backend-challenge/pull/35) I used `next(new ValidationError(...))` to forward errors to the middleware. Upgrading to Express 5 in [#37](https://github.com/fariassdev/flight-search-backend-challenge/pull/37) simplified this, allowing me to directly `throw` errors from async handlers and omit the `next` callback entirely.
 
 </details>
 
 <details>
-<summary><b>Type-safe query validation</b> (#33)</summary>
+<summary><b>Type-safe query validation</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/33">#33</a>)</summary>
 
-I validate query params with a small handler wrapper, `withValidatedQuery(schema, handler)`, instead of a plain middleware. It was the best option I found that is, at the same time:
+I validate query params using `withValidatedQuery(schema, handler)`. This wrapper:
 
-- **Type safe**: the `query` argument the handler receives is fully inferred from the Zod schema (`z.infer`), so I work with parsed, typed values, not `string | string[]`.
-- **Semantic and readable**: validation sits right next to the route it guards.
-- **Response-safe**: I can type the route's `Response<T>`, so returning a malformed response is a compile-time error.
+- Infers the query types from the Zod schema (`z.infer`), avoiding manual casts.
+- Keeps validation right next to the route it guards.
+- Integrates with Express response typing to guarantee compile-time response safety.
 
-The alternatives I considered were mutating `req.query` from a middleware or extending the Express `Request` interface with TypeScript module augmentation. Both were weaker on type safety because I had to type the parsed query as `unknown` or `Record<string, unknown>` and couldn't get full type inference at the route layer.
-
-</details>
-
-<details>
-<summary><b>Centralized, validated config</b> (#42)</summary>
-
-All configuration is read once at startup into a single typed `envConfig` object, validated by Zod. Bad config fails fast with readable field errors instead of blowing up at runtime. It loads `.env` then `.env.<NODE_ENV>` using Node's native `loadEnvFile()`, so no `dotenv` dependency needed. This only became possible after the Node upgrade in #40.
+Alternative approaches like mutating `req.query` in middleware or using TypeScript module augmentation were rejected because they required typing the parsed query as `unknown`, losing compile-time type safety.
 
 </details>
 
 <details>
-<summary><b>Express hardening</b> (#45)</summary>
+<summary><b>Centralized, validated config</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/42">#42</a>)</summary>
 
-Minimal but production-minded HTTP defaults: `helmet`, env-driven CORS, bounded body parsers, and graceful shutdown with a forced-exit fallback.
-
-</details>
-
-<details>
-<summary><b>Structured logging</b> (#51)</summary>
-
-Centralized logging with Pino + `pino-http`. One logger module, a per-request logger (`req.log`), env-aware levels (silent in tests, pretty in dev, JSON in prod). No scattered `console.log`.
+All configuration is read once at startup into a Zod-validated `envConfig` object. Bad configurations fail fast with readable field errors. It loads `.env` then `.env.<NODE_ENV>` using Node's native `loadEnvFile()`, eliminating the `dotenv` dependency (possible after the Node upgrade in [#40](https://github.com/fariassdev/flight-search-backend-challenge/pull/40)).
 
 </details>
 
 <details>
-<summary><b>API Documentation</b> (#53, #56)</summary>
+<summary><b>Express hardening</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/45">#45</a>)</summary>
 
-Refer to the [API documentation](#api-documentation) section below.
-
-</details>
-
-<details>
-<summary><b>Developer experience and code quality</b> (#23, #24, #27, #28)</summary>
-
-ESLint, Prettier, and Husky + lint-staged run lint/format on commit, with commitlint enforcing conventional commits. `.editorconfig` and `.gitattributes` ensure consistent formatting and line endings across editors and OS. This keeps diffs clean, history semantic, and catches problems before they land.
+Secured the app using `helmet`, environment-driven CORS, bounded body parsers, and a clean graceful shutdown sequence.
 
 </details>
 
 <details>
-<summary><b>Reproducible environment</b> (#40, #47)</summary>
+<summary><b>Structured logging</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/51">#51</a>)</summary>
 
-Pinning the runtime and dependencies matters so the project behaves the same on every machine and in CI. I pin Node with `.nvmrc` + `engines` + `engine-strict=true` (npm refuses the wrong Node), and pin exact dependency versions with `save-exact=true` so new installs don't drift into caret ranges. The lockfile is committed too.
+Centralized logging using Pino + `pino-http`. Employs a single logger module, per-request context logging (`req.log`), and environment-aware formatting (pretty-print in development, raw JSON in production, silent in tests).
+
+</details>
+
+<details>
+<summary><b>Developer experience and code quality</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/23">#23</a>, <a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/24">#24</a>, <a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/27">#27</a>, <a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/28">#28</a>)</summary>
+
+Enforced code consistency and pre-commit checks using ESLint, Prettier, Husky, lint-staged, and commitlint. Added `.editorconfig` and `.gitattributes` to keep formatting and line endings consistent across editors and platforms.
+
+</details>
+
+<details>
+<summary><b>Reproducible environment</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/40">#40</a>, <a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/47">#47</a>)</summary>
+
+Pinned Node using `.nvmrc` and package engines (enforced by `engine-strict=true`). Dependencies are pinned to exact versions with `save-exact=true` and locked in the committed lockfile to prevent environment drift.
 
 </details>
 
 ## API Documentation
 
-The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation (#53), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` (#56). Both endpoints are disabled in production to keep the API private and reduce attack surface.
+The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation ([#53](https://github.com/fariassdev/flight-search-backend-challenge/pull/53)), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` ([#56](https://github.com/fariassdev/flight-search-backend-challenge/pull/56)). Both endpoints are disabled in production to keep the API private and reduce attack surface.
 
 ## Future work
 
@@ -179,9 +172,9 @@ For a real production project, there are several draft issues from my [backlog](
 
 I marked these backlog issues as `WONTFIX` as they are not needed for this challenge:
 
-- Add pagination (#38): The upstream feed is a single JSON blob, so pagination wouldn't save fetch or memory work.
-- Health and readiness endpoints (#44): There is no live deployment for this challenge.
-- Ensure `airports.json` is updated with OpenFlights `airports.dat` (#11): Unnecessary overhead for this challenge.
+- Add pagination ([#38](https://github.com/fariassdev/flight-search-backend-challenge/issues/38)): The upstream feed is a single JSON blob, so pagination wouldn't save fetch or memory work.
+- Health and readiness endpoints ([#44](https://github.com/fariassdev/flight-search-backend-challenge/issues/44)): There is no live deployment for this challenge.
+- Ensure `airports.json` is updated with OpenFlights `airports.dat` ([#11](https://github.com/fariassdev/flight-search-backend-challenge/issues/11)): Unnecessary overhead for this challenge.
 
 ## How I used AI
 
