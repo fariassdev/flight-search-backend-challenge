@@ -57,3 +57,7 @@ Relevant PRs: #14, #49, #58
 - Only airports with valid IATA codes, since the API is for commercial flights and the flight feed uses IATA codes.
 - Airport data doesn't change much. Committing the pre-processed JSON is fine for this challenge. In production I'd store it in a database and cache in Redis.
 - Unknown airport codes return `distance: null`, not an error. The flight still shows up in results.
+
+## Workflow
+
+I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. My approach was to focus on getting working software first, keeping PRs and commits atomic. Once the core challenge tasks were done (#1 to #20), I shifted focus to production-ready standards (error handling, logging, reproducible environments, and configuration safety), introducing them one clean PR at a time (#23 to #58).
