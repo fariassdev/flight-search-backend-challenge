@@ -53,33 +53,47 @@ export const ScoredFlightSchema = FlightSchema.extend({
   }),
 });
 
-export const FlightSearchQuerySchema = z.object({
-  maxDuration: z.coerce
-    .number<string>({
-      error: 'Invalid input: must be a valid number.',
-    })
-    .positive({
-      error: 'Invalid input: must be a positive number.',
-    })
-    .meta({
-      description: 'filter out flights longer than X hours',
-    })
-    .optional(),
-  minDepartureTime: isoDateTimeCoerce
-    .meta({
-      description: 'filter out flights before this time, in ISO 8601 format',
-    })
-    .optional(),
-  maxDepartureTime: isoDateTimeCoerce
-    .meta({
-      description: 'filter out flights after this time, in ISO 8601 format',
-    })
-    .optional(),
-  preferredAirline: z
-    .string()
-    .meta({ description: 'the preferred airline for the flight' })
-    .optional(),
-});
+export const FlightSearchQuerySchema = z
+  .object({
+    maxDuration: z.coerce
+      .number<string>({
+        error: 'Invalid input: must be a valid number.',
+      })
+      .positive({
+        error: 'Invalid input: must be a positive number.',
+      })
+      .meta({
+        description: 'filter out flights longer than X hours',
+      })
+      .optional(),
+    minDepartureTime: isoDateTimeCoerce
+      .meta({
+        description: 'filter out flights before this time, in ISO 8601 format',
+      })
+      .optional(),
+    maxDepartureTime: isoDateTimeCoerce
+      .meta({
+        description: 'filter out flights after this time, in ISO 8601 format',
+      })
+      .optional(),
+    preferredAirline: z
+      .string()
+      .meta({ description: 'the preferred airline for the flight' })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.minDepartureTime &&
+      data.maxDepartureTime &&
+      data.maxDepartureTime < data.minDepartureTime
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'maxDepartureTime cannot be before minDepartureTime',
+        path: ['maxDepartureTime'],
+      });
+    }
+  });
 
 export const FlightSearchResponseSchema = z.object({
   count: z.number().positive(),

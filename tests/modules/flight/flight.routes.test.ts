@@ -119,5 +119,46 @@ describe('GET /api/flights/search', () => {
         },
       });
     });
+
+    it('should return a validation error when maxDepartureTime is before minDepartureTime', async () => {
+      const response = await request(app)
+        .get(
+          '/api/flights/search?minDepartureTime=2026-06-01T12:00:00Z&maxDepartureTime=2026-06-01T10:00:00Z',
+        )
+        .expect(400)
+        .expect('Content-Type', /application\/problem\+json/);
+
+      expect(response.body).toMatchObject({
+        code: 'validation_failed',
+        status: 400,
+        errors: {
+          maxDepartureTime: expect.arrayContaining([
+            expect.stringContaining(
+              'maxDepartureTime cannot be before minDepartureTime',
+            ),
+          ]),
+        },
+      });
+    });
+
+    it('should pass validation when maxDepartureTime is equal to minDepartureTime', async () => {
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue([]);
+      await request(app)
+        .get(
+          '/api/flights/search?minDepartureTime=2026-06-01T12:00:00Z&maxDepartureTime=2026-06-01T12:00:00Z',
+        )
+        .expect(200);
+    });
+
+    it('should pass validation when only one of minDepartureTime or maxDepartureTime is provided', async () => {
+      jest.spyOn(flightRepository, 'fetchFlights').mockResolvedValue([]);
+      await request(app)
+        .get('/api/flights/search?minDepartureTime=2026-06-01T12:00:00Z')
+        .expect(200);
+
+      await request(app)
+        .get('/api/flights/search?maxDepartureTime=2026-06-01T12:00:00Z')
+        .expect(200);
+    });
   });
 });
