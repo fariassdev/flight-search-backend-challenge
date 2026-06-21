@@ -16,70 +16,62 @@ curl "http://localhost:3000/api/flights/search?preferredAirline=AA"
 curl "http://localhost:3000/api/flights/search?maxDuration=5"
 ```
 
-Airport data is already committed. To regenerate: `npm run fetch-airports`.
-
-Once the server is running, you can also browse the interactive API docs at `http://localhost:3000/docs` to explore and try out the endpoint. More details in the [API documentation](#api-documentation) section.
+Once the server is running, browse the interactive API docs at `http://localhost:3000/docs`. More details in the [API documentation](#api-documentation) section.
 
 ## Core implementation
 
 ### Task A - Fix ranking
 
-The bug was in `scoreAndSortFlights`: preferred airline flights were scored right but sorted wrong.
+The bug was in `scoreAndSortFlights`: preferred airline flights were scored correctly but sorted wrong.
 
-- Score = `duration × 0.9` when carrier matches `preferredAirline`, else `duration × 1.0`
-- Sort by score ascending (lower is better)
+- Score: `duration × 0.9` for preferred carrier, else `duration × 1.0`
+- Sort: Ascending by score (lower is better)
 
-I also split scoring and sorting into `scoreFlights` and `sortByScore`, one job each, and sorting no longer mutates the input. #1, #3, #40 (changed to modern toSorted syntax later)
+I separated scoring and sorting into `scoreFlights` and `sortByScore` to follow single responsibility and avoid mutating the input. #1, #3
 
 ### Task B - Filters
 
-Optional query params: `maxDuration`, `minDepartureTime`, `maxDepartureTime`. Applied before scoring; they work together and with `preferredAirline`. Requirements in #2, first implementation in #5.
-
-In #5 I added a quick `maxDuration` check, but it always ran `Number(maxDuration)`, so a request without `maxDuration` got a 400. The final fix is in #33: `FlightSearchQuerySchema` treats all filter params as optional, coerces types, and returns proper validation errors only when a param is actually sent. I also added a validation in #58 to ensure that the `maxDepartureTime` query parameter is after `minDepartureTime`.
+I added optional query parameters: `maxDuration`, `minDepartureTime`, and `maxDepartureTime`. The final implementation in #33 uses a Zod schema to treat them as optional, coerce types, and return clean validation errors. I also added a check in #58 to guarantee that `maxDepartureTime` is after `minDepartureTime`.
 
 ### Task C - Real distance
 
-For the airport data, I wrote a script (`npm run fetch-airports`) to download OpenFlights `airports.dat`, parse the CSV, validate the records with Zod, and build a JSON map keyed by IATA code for O(1) lookup. Since the OpenFlights file hasn't changed in years, I committed the pre-processed `airports.json` instead of fetching it on every server start. At runtime, `findByIata` just reads that file once. Only airports with a valid IATA code are kept (see [assumptions](#assumptions) below). More context in #12.
+For the airport data, I wrote a script (`npm run fetch-airports`) to download the OpenFlights dataset, validate rows with Zod, and build a JSON map for O(1) lookup. Since the dataset hasn't changed in years, I committed the pre-processed `airports.json` instead of fetching it on every startup. #12
 
-To calculate the distance, I used TDD. I wrote tests first using [airmilescalculator.com](https://www.airmilescalculator.com/) to calibrate the expected distances, implemented `haversineDistanceMiles` to pass them, and then refactored. The function itself is pure math, with no coordinate validation inside; that happens at the edges. If an airport code is missing or unknown, `getDistanceBetweenAirports` returns `null` instead of throwing, so the flight still shows up in results. #17, #20
+For the distance calculation, I used TDD to implement `haversineDistanceMiles` and calibrated it against [this online calculator](https://www.airmilescalculator.com/). The function is pure math; validation happens at the boundaries. If an airport code is missing or unknown, `getDistanceBetweenAirports` returns `null` instead of throwing so the flight still shows up in results. #17, #20
 
-I followed this "Zod at the edges" approach for the rest of the project: search query params, upstream flight JSON, airport fetch script output, the committed `airports.json` on load, and env config at startup. Any invalid input fails fast and returns a 400 with `application/problem+json`. #33, #35
+I applied this "Zod at the boundaries" pattern everywhere: query parameters, upstream flights feed, startup environment variables, and airport data. If anything is invalid at the edge, it fails fast and returns 400 with `application/problem+json`. #33, #35
 
 ### Testing
 
-- Unit tests for pure logic: haversine, filter/score/sort, airport distance
-- HTTP tests with supertest: query params, response shape, validation errors
+- **Unit tests:** Cover pure logic (haversine formula, filtering/sorting, and airport distance mapping).
+- **HTTP tests (supertest):** Verify routes, validation rules, error handling, and response schemas.
 
-Haversine correctness is tested on its own. Airport service tests mock only the haversine function and use the real `airports.json` for lookups. Flight service tests mock the airport service to avoid using the real `airports.json` for lookups and focus on flight service logic.
-
-Relevant PRs: #14, #49, #58
+Airport service tests use the real `airports.json` but mock the haversine formula. Flight service tests mock the airport service to keep tests isolated. #14, #49, #58
 
 ## Assumptions
 
-- Only airports with valid IATA codes, since the API is for commercial flights and the flight feed uses IATA codes.
-- Airport data doesn't change much. Committing the pre-processed JSON is fine for this challenge. In production I'd store it in a database and cache in Redis.
-- Unknown airport codes return `distance: null`, not an error. The flight still shows up in results.
+- Only airports with valid IATA codes are kept, as the API only handles commercial flights.
+- Committing the pre-processed JSON is enough for this challenge. In production, I would store it in a database and cache it in Redis.
+- Unknown airport codes return `distance: null` rather than throwing an error so the flight remains visible.
 
 ## Workflow
 
-I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. My approach was to focus on getting working software first, keeping PRs and commits atomic. Once the core challenge tasks were done (#1 to #20), I shifted focus to production-ready standards (error handling, logging, reproducible environments, and configuration safety), introducing them one clean PR at a time (#23 to #58).
+I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. I focused on getting working software first, keeping PRs and commits atomic. Once the core challenge was complete (#1 to #20), I shifted to production-ready improvements (error handling, logging, environment safety, etc.), layering them in one clean PR at a time (#23 to #58).
 
 ## Architecture and project structure
 
-I moved away from the original monolithic `server.ts` into a modular layout in #16 and kept that shape from there on. Each file has a single responsibility, and the Express app creation is decoupled from the server binding: `createApp()` builds and wires the app, `server.ts` only binds the port and owns the process lifecycle (graceful shutdown, signals). That split (done in #31) is what makes the HTTP tests possible without ever opening a socket.
+I modularized the monolithic `server.ts` in #16. Express setup is decoupled from port binding: `createApp()` builds and wires the application, while `server.ts` handles the process lifecycle (graceful shutdown, signal handling). This split (done in #31) allows us to run HTTP tests without opening sockets.
 
-| Layer      | Files             | Responsibility                                         |
-| ---------- | ----------------- | ------------------------------------------------------ |
-| Server     | `server.ts`       | Bind port, lifecycle (graceful shutdown, signals)      |
-| App        | `app.ts`          | Build Express app, wire middleware and routes          |
-| Routes     | `*.routes.ts`     | Define endpoints, validate query, type the response    |
-| Service    | `*.service.ts`    | Business logic: filter/score/sort, distance            |
-| Repository | `*.repository.ts` | Data access: fetch flights, airport lookup             |
-| Schema     | `*.schema.ts`     | Zod schemas = validation + inferred types at the edges |
-| Shared     | `shared/**`       | Errors, middleware, logger, haversine                  |
-| Config     | `config/env.ts`   | Typed env, validated once at startup                   |
-
-The same modular shape pays off in the **tests**: pure logic (haversine, filter/score/sort, distance) is unit-tested in isolation, and the wired app is tested end-to-end with `supertest`, no running server needed. See the [Testing](#testing) section above.
+| Layer      | Files             | Responsibility                                           |
+| ---------- | ----------------- | -------------------------------------------------------- |
+| Server     | `server.ts`       | Port binding, process lifecycle, graceful shutdown       |
+| App        | `app.ts`          | Express app initialization, middleware wiring            |
+| Routes     | `*.routes.ts`     | Endpoint definitions, query validation, typing responses |
+| Service    | `*.service.ts`    | Business logic (filter/score/sort, distance math)        |
+| Repository | `*.repository.ts` | Data access (flight feed fetch, airport lookups)         |
+| Schema     | `*.schema.ts`     | Zod schemas for runtime validation and inferred types    |
+| Shared     | `shared/**`       | Custom errors, middleware, logger, haversine formula     |
+| Config     | `config/env.ts`   | Validated, typed environment configuration               |
 
 <details>
 <summary><b>View architecture diagram</b></summary>
@@ -170,18 +162,18 @@ Pinning the runtime and dependencies matters so the project behaves the same on 
 
 ## API Documentation
 
-The OpenAPI 3.0 spec is generated from the **same Zod schemas** used for validation (#53), so the docs can't drift from the real request/response shapes. It's served at `/openapi.json`, with a [Scalar](https://github.com/scalar/scalar) docs UI at `/docs` (#56). Both are mounted only outside production, since this is a non-public API and there's no reason to expand its attack surface.
+The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation (#53), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` (#56). Both endpoints are disabled in production to keep the API private and reduce attack surface.
 
 ## Future work
 
-For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up but I avoided them explicitly to cut out the challenge scope:
+For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up next:
 
 - **CI/CD pipeline**: Set up GitHub Actions to run tests, linting, and formatting checks automatically on every PR.
 - **Dockerization**: Add a `Dockerfile` to containerize the application.
-- **CD and deployment**: Configure a deployment pipeline to release the service to staging / production.
-- **Import aliases**: Configure path mappings in TypeScript (like `@/*`) to avoid long relative import paths.
+- **CD and deployment**: Configure a deployment pipeline to release the service.
+- **Import aliases**: Configure TypeScript path mappings (like `@/*`) to avoid long relative imports.
 - **Package manager**: Switch to `pnpm` for faster installs and better security.
-- **Jest coverage threshold**: Enforce a minimum test coverage percentage in Jest to prevent coverage regression.
+- **Jest coverage threshold**: Enforce a minimum test coverage percentage in Jest.
 
 ### Discarded issues
 
@@ -189,7 +181,7 @@ I marked these backlog issues as `WONTFIX` as they are not needed for this chall
 
 - Add pagination (#38): The upstream feed is a single JSON blob, so pagination wouldn't save fetch or memory work.
 - Health and readiness endpoints (#44): There is no live deployment for this challenge.
-- Ensure `airports.json` is updated with OpenFlights `airports.dat` (#11): Would be an overkill for this challenge.
+- Ensure `airports.json` is updated with OpenFlights `airports.dat` (#11): Unnecessary overhead for this challenge.
 
 ## How I used AI
 
