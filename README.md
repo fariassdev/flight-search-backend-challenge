@@ -85,4 +85,18 @@ I moved away from the original monolithic `server.ts` into a modular layout in #
 | Shared     | `shared/**`       | Errors, middleware, logger, haversine                  |
 | Config     | `config/env.ts`   | Typed env, validated once at startup                   |
 
+```mermaid
+flowchart TD
+  client[Client] --> server[server.ts<br/>bind + lifecycle]
+  server --> app[app.ts<br/>createApp + middleware]
+  app --> routes[flight.routes.ts]
+  routes -->|withValidatedQuery| schema[Zod schemas]
+  routes --> fsvc[flight.service.ts]
+  fsvc --> frepo[flight.repository.ts]
+  fsvc --> asvc[airport.service.ts]
+  asvc --> arepo[airport.repository.ts]
+  asvc --> hav[haversine.ts]
+  app --> err[errorHandler middleware]
+```
+
 The same modular shape pays off in the **tests**: pure logic (haversine, filter/score/sort, distance) is unit-tested in isolation, and the wired app is tested end-to-end with `supertest`, no running server needed. See the [Testing](#testing) section above.
