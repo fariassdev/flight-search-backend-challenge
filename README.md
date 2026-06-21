@@ -174,3 +174,22 @@ Pinning the runtime and dependencies matters so the project behaves the same on 
 ## API Documentation
 
 The OpenAPI 3.0 spec is generated from the **same Zod schemas** used for validation (#53), so the docs can't drift from the real request/response shapes. It's served at `/openapi.json`, with a [Scalar](https://github.com/scalar/scalar) docs UI at `/docs` (#56). Both are mounted only outside production, since this is a non-public API and there's no reason to expand its attack surface.
+
+## Future work
+
+For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up but I avoided them explicitly to cut out the challenge scope:
+
+- **CI/CD pipeline**: Set up GitHub Actions to run tests, linting, and formatting checks automatically on every PR.
+- **Dockerization**: Add a `Dockerfile` to containerize the application.
+- **CD and deployment**: Configure a deployment pipeline to release the service to staging / production.
+- **Import aliases**: Configure path mappings in TypeScript (like `@/*`) to avoid long relative import paths.
+- **Package manager**: Switch to `pnpm` for faster installs and better security.
+- **Jest coverage threshold**: Enforce a minimum test coverage percentage in Jest to prevent coverage regression.
+
+### Discarded issues
+
+I marked these backlog issues as `WONTFIX` as they are not needed for this challenge:
+
+- Add pagination (#38): The upstream feed is a single JSON blob, so pagination wouldn't save fetch or memory work.
+- Health and readiness endpoints (#44): There is no live deployment for this challenge.
+- Ensure `airports.json` is updated with OpenFlights `airports.dat` (#11): Would be an overkill for this challenge.
