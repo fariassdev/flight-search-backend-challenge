@@ -157,6 +157,13 @@ Pinned Node using `.nvmrc` and package engines (enforced by `engine-strict=true`
 
 The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation ([#53](https://github.com/fariassdev/flight-search-backend-challenge/pull/53)), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` ([#56](https://github.com/fariassdev/flight-search-backend-challenge/pull/56)). Both endpoints are disabled in production to keep the API private and reduce attack surface.
 
+<details>
+<summary><b>View Demo</b></summary>
+
+https://github.com/user-attachments/assets/d8421e1c-9ac8-4997-9cb8-d2b1070ff5bc
+
+</details>
+
 ## Future work
 
 For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up next:
