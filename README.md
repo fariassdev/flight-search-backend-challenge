@@ -64,14 +64,6 @@ Relevant PRs: #14, #49, #58
 
 I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. My approach was to focus on getting working software first, keeping PRs and commits atomic. Once the core challenge tasks were done (#1 to #20), I shifted focus to production-ready standards (error handling, logging, reproducible environments, and configuration safety), introducing them one clean PR at a time (#23 to #58).
 
-### How I used AI
-
-The core use was for issue and PR descriptions: Cursor or GitHub Copilot's "Summarize" button gave me a draft, I tweaked it, linked the issue, and submitted. That saved me time on the most repetitive writing.
-
-For research I used Perplexity as my main search engine. It was really useful when I needed to compare approaches, for example when choosing how to generate the OpenAPI spec. I looked into [tsoa](https://github.com/lukeautry/tsoa), [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc), [zod-to-openapi](https://github.com/samchungy/zod-openapi) and [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi), gathered the trade-offs through Perplexity, and made an informed decision based on my own criteria after having all the context.
-
-Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed. Finally, I also used AI to help me structure, review, and put the final touches on this README.
-
 ## Architecture and project structure
 
 I moved away from the original monolithic `server.ts` into a modular layout in #16 and kept that shape from there on. Each file has a single responsibility, and the Express app creation is decoupled from the server binding: `createApp()` builds and wires the app, `server.ts` only binds the port and owns the process lifecycle (graceful shutdown, signals). That split (done in #31) is what makes the HTTP tests possible without ever opening a socket.
@@ -193,3 +185,11 @@ I marked these backlog issues as `WONTFIX` as they are not needed for this chall
 - Add pagination (#38): The upstream feed is a single JSON blob, so pagination wouldn't save fetch or memory work.
 - Health and readiness endpoints (#44): There is no live deployment for this challenge.
 - Ensure `airports.json` is updated with OpenFlights `airports.dat` (#11): Would be an overkill for this challenge.
+
+## How I used AI
+
+The core use was for issue and PR descriptions: Cursor or GitHub Copilot's "Summarize" button gave me a draft, I tweaked it, linked the issue, and submitted. That saved me time on the most repetitive writing.
+
+For research I used Perplexity as my main search engine. It was really useful when I needed to compare approaches, for example when choosing how to generate the OpenAPI spec. I looked into [tsoa](https://github.com/lukeautry/tsoa), [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc), [zod-to-openapi](https://github.com/samchungy/zod-openapi) and [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi), gathered the trade-offs through Perplexity, and made an informed decision based on my own criteria after having all the context.
+
+Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed. Finally, I also used AI to help me structure, review, and put the final touches on this README.
