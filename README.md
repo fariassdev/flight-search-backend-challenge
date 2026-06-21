@@ -18,6 +18,8 @@ curl "http://localhost:3000/api/flights/search?maxDuration=5"
 
 Airport data is already committed. To regenerate: `npm run fetch-airports`.
 
+Once the server is running, you can also browse the interactive API docs at `http://localhost:3000/docs` to explore and try out the endpoint. More details in the [API documentation](#api-documentation) section.
+
 ## Core implementation
 
 ### Task A - Fix ranking
@@ -149,6 +151,13 @@ Centralized logging with Pino + `pino-http`. One logger module, a per-request lo
 </details>
 
 <details>
+<summary><b>API Documentation</b> (#53, #56)</summary>
+
+Refer to the [API documentation](#api-documentation) section below.
+
+</details>
+
+<details>
 <summary><b>Developer experience and code quality</b> (#23, #24, #27, #28)</summary>
 
 ESLint, Prettier, and Husky + lint-staged run lint/format on commit, with commitlint enforcing conventional commits. `.editorconfig` and `.gitattributes` ensure consistent formatting and line endings across editors and OS. This keeps diffs clean, history semantic, and catches problems before they land.
@@ -161,3 +170,7 @@ ESLint, Prettier, and Husky + lint-staged run lint/format on commit, with commit
 Pinning the runtime and dependencies matters so the project behaves the same on every machine and in CI. I pin Node with `.nvmrc` + `engines` + `engine-strict=true` (npm refuses the wrong Node), and pin exact dependency versions with `save-exact=true` so new installs don't drift into caret ranges. The lockfile is committed too.
 
 </details>
+
+## API Documentation
+
+The OpenAPI 3.0 spec is generated from the **same Zod schemas** used for validation (#53), so the docs can't drift from the real request/response shapes. It's served at `/openapi.json`, with a [Scalar](https://github.com/scalar/scalar) docs UI at `/docs` (#56). Both are mounted only outside production, since this is a non-public API and there's no reason to expand its attack surface.
