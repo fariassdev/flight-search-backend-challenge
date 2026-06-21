@@ -27,11 +27,11 @@ export function createApp() {
 
   app.use('/api/flights', flightRoutes);
 
-  app.get('/openapi.json', (_req, res) => {
-    res.json(generateOpenApiDocument());
-  });
-
   if (envConfig.NODE_ENV !== 'production') {
+    app.get('/openapi.json', (_req, res) => {
+      res.json(generateOpenApiDocument());
+    });
+
     app.use('/docs', docsRoute);
   }
 
