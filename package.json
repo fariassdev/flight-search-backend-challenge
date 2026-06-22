@@ -17,7 +17,7 @@
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "flight",
