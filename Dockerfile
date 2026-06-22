@@ -10,7 +10,7 @@ FROM base AS dev
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 COPY . .
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev:docker"]
 
 # ---- Builder (compiles TS) ----
 FROM base AS builder

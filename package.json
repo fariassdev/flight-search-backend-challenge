@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --cache --fix",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon",
+    "dev:docker": "nodemon --config nodemon.docker.json",
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
     "test": "jest",
     "test:watch": "jest --watch",

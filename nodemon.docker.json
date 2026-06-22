@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "legacyWatch": true,
+  "pollingInterval": 1000,
+  "exec": "ts-node src/server.ts"
+}
