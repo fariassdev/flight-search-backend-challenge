@@ -19,6 +19,13 @@ jobs:
           node-version: '22.23.0'
           cache: 'npm'
 
+      - name: Restore ESLint cache
+        uses: actions/cache@v5
+        with:
+          path: .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/eslint.config.mjs') }}
+          restore-keys: eslint-${{ runner.os }}-
+
       - name: Install dependencies
         run: npm ci
 
