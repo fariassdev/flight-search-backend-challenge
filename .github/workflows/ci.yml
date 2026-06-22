@@ -6,6 +6,7 @@ on:
 
 jobs:
   ci:
+    name: Lint, Type Check & Test (Node 22.23.0)
     runs-on: ubuntu-latest
     permissions:
       contents: read
