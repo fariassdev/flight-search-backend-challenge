@@ -68,7 +68,7 @@ Airport service tests use the real `airports.json` but mock the haversine formul
 
 ## Workflow
 
-I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. I focused on getting working software first, keeping PRs and commits atomic. Once the core challenge was complete ([#1](https://github.com/fariassdev/flight-search-backend-challenge/pull/1) to [#20](https://github.com/fariassdev/flight-search-backend-challenge/pull/20)), I shifted to production-ready improvements (error handling, logging, environment safety, etc.), layering them in one clean PR at a time ([#23](https://github.com/fariassdev/flight-search-backend-challenge/pull/23) to [#58](https://github.com/fariassdev/flight-search-backend-challenge/pull/58)).
+I used a [GitHub Projects kanban](https://github.com/users/fariassdev/projects/3/views/2) to stay organized. I focused on getting working software first, keeping PRs and commits atomic. Once the core challenge was complete ([#1](https://github.com/fariassdev/flight-search-backend-challenge/pull/1) to [#20](https://github.com/fariassdev/flight-search-backend-challenge/pull/20)), I shifted to production-ready improvements (error handling, logging, environment safety, containerization, CI etc.), layering them in one clean PR at a time ([#23](https://github.com/fariassdev/flight-search-backend-challenge/pull/23) to [#64](https://github.com/fariassdev/flight-search-backend-challenge/pull/64)).
 
 ## Architecture and project structure
 
@@ -172,6 +172,13 @@ Multi-stage `Dockerfile` with separate `dev` and `prod` targets: local developme
 
 </details>
 
+<details>
+<summary><b>CI pipeline</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/64">#64</a>)</summary>
+
+GitHub Actions workflow that runs on every PR to `main`: `npm run typecheck`, `lint`, `format:check`, and `test`. Checks run directly on the runner via `actions/setup-node@v6` (Node version read from `.nvmrc`, npm cache enabled) — Docker is reserved for building the deployable image, not for CI. ESLint results are cached across runs with `actions/cache`, and `lint` uses `--cache-strategy content` so the cache stays valid in CI.
+
+</details>
+
 ## API Documentation
 
 The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation ([#53](https://github.com/fariassdev/flight-search-backend-challenge/pull/53)), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` ([#56](https://github.com/fariassdev/flight-search-backend-challenge/pull/56)). Both endpoints are disabled in production to keep the API private and reduce attack surface.
@@ -187,7 +194,6 @@ https://github.com/user-attachments/assets/d8421e1c-9ac8-4997-9cb8-d2b1070ff5bc
 
 For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up next:
 
-- **CI/CD pipeline**: Set up GitHub Actions to run tests, linting, and formatting checks automatically on every PR.
 - **CD and deployment**: Configure a deployment pipeline to build and release the container image ([#61](https://github.com/fariassdev/flight-search-backend-challenge/pull/61)) to a registry and deploy the service.
 - **Import aliases**: Configure TypeScript path mappings (like `@/*`) to avoid long relative imports.
 - **Package manager**: Switch to `pnpm` for faster installs and better security.
@@ -210,5 +216,7 @@ For research I used Perplexity as my main search engine. It was really useful wh
 Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed.
 
 For Docker ([#61](https://github.com/fariassdev/flight-search-backend-challenge/pull/61)), I used AI mainly to learn, not to skip the thinking. I had not built a production image from scratch before, so I used Perplexity to read up on layers, multi-stage builds, and what actually belongs in a prod image vs a dev one. Cursor drafted the `Dockerfile` and related files from that context; I reviewed each part until I understood why it was there. When I wanted to check the prod image was not bloated, the AI suggested simple commands (`docker history`, `du`, `docker save`) to inspect layer sizes and `node_modules` so I confirmed the images were optimal.
+
+For CI ([#64](https://github.com/fariassdev/flight-search-backend-challenge/pull/64)), Cursor drafted the workflow YAML from what I wanted checked on each PR. I looked up `actions/setup-node@v6` caching and ESLint cache persistence in CI through Perplexity, then reviewed the steps and the supporting script changes (`format:check`, `--cache-strategy content`) before merging.
 
 Finally, I also used AI to help me structure, review, and put the final touches on this README.
