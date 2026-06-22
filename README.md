@@ -4,11 +4,23 @@ Fix a ranking bug, add search filters, and calculate real distances between airp
 
 ## Quick start
 
+### Local Development
+
 ```bash
 npm install
 npm run dev    # http://localhost:3000
 npm test
 ```
+
+### Docker Development
+
+Alternatively, you can run the development environment in Docker using:
+
+```bash
+npm run docker:up    # http://localhost:3000
+```
+
+### Usage
 
 ```bash
 curl "http://localhost:3000/api/flights/search"
