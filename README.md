@@ -4,11 +4,23 @@ Fix a ranking bug, add search filters, and calculate real distances between airp
 
 ## Quick start
 
+### Local Development
+
 ```bash
 npm install
 npm run dev    # http://localhost:3000
 npm test
 ```
+
+### Docker Development
+
+Alternatively, you can run the development environment in Docker using:
+
+```bash
+npm run docker:up    # http://localhost:3000
+```
+
+### Usage
 
 ```bash
 curl "http://localhost:3000/api/flights/search"
@@ -153,6 +165,13 @@ Pinned Node using `.nvmrc` and package engines (enforced by `engine-strict=true`
 
 </details>
 
+<details>
+<summary><b>Containerization</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/61">#61</a>)</summary>
+
+Multi-stage `Dockerfile` with separate `dev` and `prod` targets: local development runs via Docker Compose with hot reload (`nodemon` + bind-mounted `src/`), while the production image ships only compiled `dist/` and prod `node_modules` (~21 MB vs ~173 MB in dev), runs as non-root `node`, and uses layer caching plus `.dockerignore` to keep builds fast and images lean.
+
+</details>
+
 ## API Documentation
 
 The OpenAPI 3.0 spec is generated directly from the Zod schemas used for validation ([#53](https://github.com/fariassdev/flight-search-backend-challenge/pull/53)), preventing documentation drift. It is served at `/openapi.json` and rendered as a Scalar docs UI at `/docs` ([#56](https://github.com/fariassdev/flight-search-backend-challenge/pull/56)). Both endpoints are disabled in production to keep the API private and reduce attack surface.
@@ -169,8 +188,7 @@ https://github.com/user-attachments/assets/d8421e1c-9ac8-4997-9cb8-d2b1070ff5bc
 For a real production project, there are several draft issues from my [backlog](https://github.com/users/fariassdev/projects/3/views/2) that would be desirable to set up next:
 
 - **CI/CD pipeline**: Set up GitHub Actions to run tests, linting, and formatting checks automatically on every PR.
-- **Dockerization**: Add a `Dockerfile` to containerize the application.
-- **CD and deployment**: Configure a deployment pipeline to release the service.
+- **CD and deployment**: Configure a deployment pipeline to build and release the container image ([#61](https://github.com/fariassdev/flight-search-backend-challenge/pull/61)) to a registry and deploy the service.
 - **Import aliases**: Configure TypeScript path mappings (like `@/*`) to avoid long relative imports.
 - **Package manager**: Switch to `pnpm` for faster installs and better security.
 - **Jest coverage threshold**: Enforce a minimum test coverage percentage in Jest.
@@ -189,4 +207,8 @@ The core use was for issue and PR descriptions: Cursor or GitHub Copilot's "Summ
 
 For research I used Perplexity as my main search engine. It was really useful when I needed to compare approaches, for example when choosing how to generate the OpenAPI spec. I looked into [tsoa](https://github.com/lukeautry/tsoa), [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc), [zod-to-openapi](https://github.com/samchungy/zod-openapi) and [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi), gathered the trade-offs through Perplexity, and made an informed decision based on my own criteria after having all the context.
 
-Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed. Finally, I also used AI to help me structure, review, and put the final touches on this README.
+Beyond that, I used it as a copilot assistant, not as the main driver. For most PRs the inline IDE autocomplete was enough to complete the implementation quickly by myself. In more complex parts, like the query validation middleware, I also used Perplexity and Cursor to help me reach the approach I liked the most, but without delegating the full implementation to them. For easier tasks to automate, like writing tests once I had the testing strategy clear, I let Cursor write some of them and then reviewed.
+
+For Docker ([#61](https://github.com/fariassdev/flight-search-backend-challenge/pull/61)), I used AI mainly to learn, not to skip the thinking. I had not built a production image from scratch before, so I used Perplexity to read up on layers, multi-stage builds, and what actually belongs in a prod image vs a dev one. Cursor drafted the `Dockerfile` and related files from that context; I reviewed each part until I understood why it was there. When I wanted to check the prod image was not bloated, the AI suggested simple commands (`docker history`, `du`, `docker save`) to inspect layer sizes and `node_modules` so I confirmed the images were optimal.
+
+Finally, I also used AI to help me structure, review, and put the final touches on this README.

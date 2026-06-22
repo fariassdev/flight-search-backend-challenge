@@ -12,10 +12,12 @@
     "lint:fix": "eslint . --cache --fix",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon",
+    "dev:docker": "nodemon --config nodemon.docker.json",
+    "docker:up": "docker-compose up --build",
     "fetch-airports": "ts-node src/scripts/fetchOpenflightsAirports.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "flight",
