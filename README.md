@@ -175,7 +175,7 @@ Multi-stage `Dockerfile` with separate `dev` and `prod` targets: local developme
 <details>
 <summary><b>CI pipeline</b> (<a href="https://github.com/fariassdev/flight-search-backend-challenge/pull/64">#64</a>)</summary>
 
-GitHub Actions workflow that runs on every PR to `main`: `npm run typecheck`, `lint`, `format:check`, and `test`. Checks run directly on the runner via `actions/setup-node@v6` (Node version read from `.nvmrc`, npm cache enabled) — Docker is reserved for building the deployable image, not for CI. ESLint results are cached across runs with `actions/cache`, and `lint` uses `--cache-strategy content` so the cache stays valid in CI.
+GitHub Actions workflow that runs on every PR to `main`: `npm run typecheck`, `lint`, `format:check`, and `test`. Checks run directly on the runner via `actions/setup-node@v6` (Node version read from `.nvmrc`, npm cache enabled) — Docker is reserved for building the deployable image, not for CI. ESLint results are cached across runs with `actions/cache`, and `lint` uses `--cache-strategy content` so the cache stays valid in CI. The action executes completely in just 38 seconds. _See an [example here](https://github.com/fariassdev/flight-search-backend-challenge/actions/runs/27963234673)._
 
 </details>
 
